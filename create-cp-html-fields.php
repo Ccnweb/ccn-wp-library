@@ -30,7 +30,7 @@ function create_HTML_field($field, $options) {
         $ifdateclass = ($field['type'] == 'date') ? ' datepicker-here' : '';
         
         // specific html attributes
-        $html_attributes = (isset($field['html_attributes'])) ? implode(' ', array_map_assow($field['html_attributes'], function($k, $v) {return $k.'="'.str_replace('"','\"', $v).'"';})) : '';
+        $html_attributes = (isset($field['html_attributes'])) ? implode(' ', array_map_assoc($field['html_attributes'], function($k, $v) {return $k.'="'.str_replace('"','\"', $v).'"';})) : '';
 
         return '
         <input type="'.get_HTML_field_input_type($field['type']).'" 
