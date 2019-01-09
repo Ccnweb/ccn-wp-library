@@ -18,12 +18,19 @@ function create_HTML_field($field, $options) {
 
     // case of simple HTML input elements
     if (is_convertible_in_HTML_input($field['type'])) {
-        $regex_pattern = ($field['regex_pattern']) ? $field['regex_pattern'] : get_mytype_HTML_pattern($field['type']);
+        // regex
+        $regex_pattern = (isset($field['regex_pattern'])) ? $field['regex_pattern'] : get_mytype_HTML_pattern($field['type']);
         $ifregex = ($regex_pattern != '') ? ' pattern="'.$regex_pattern.'" ' : '';
+        
+        // placeholder
         $ifplaceholder = (in_array($options['label'], array('placeholder', 'both'))) ? ' placeholder="'.$field['html_label'].'" ' : "";
+        
         // date
         $ifdate = ($field['type'] == 'date') ? ' data-date-format="dd-mm-yyyy" data-language="fr"' : '';
         $ifdateclass = ($field['type'] == 'date') ? ' datepicker-here' : '';
+        
+        // specific html attributes
+        $html_attributes = (isset($field['html_attributes'])) ? implode(' ', array_map_assow($field['html_attributes'], function($k, $v) {return $k.'="'.str_replace('"','\"', $v).'"';})) : '';
 
         return '
         <input type="'.get_HTML_field_input_type($field['type']).'" 
@@ -34,9 +41,11 @@ function create_HTML_field($field, $options) {
             '.$ifplaceholder.'
             '.$ifregex.'
             '.(($options['required']) ? ' required ' : '' ).'
-            value="'.$options['value'].'" />
+            value="'.$options['value'].'" 
+            '.$html_attributes.' />
         ';
-    // other cases todo...
+
+    // other cases for more complex inputs todo...
     } else {
         die("Cannot render type ".$field['type'].' in HTML');
     }
