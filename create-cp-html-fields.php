@@ -18,7 +18,7 @@ function create_HTML_field($field, $options) {
 
     // case of simple HTML input elements
     if (is_convertible_in_HTML_input($field['type'])) {
-        $regex_pattern = get_mytype_HTML_pattern($field['type']);
+        $regex_pattern = ($field['regex_pattern']) ? $field['regex_pattern'] : get_mytype_HTML_pattern($field['type']);
         $ifregex = ($regex_pattern != '') ? ' pattern="'.$regex_pattern.'" ' : '';
         $ifplaceholder = (in_array($options['label'], array('placeholder', 'both'))) ? ' placeholder="'.$field['html_label'].'" ' : "";
         // date
@@ -43,7 +43,7 @@ function create_HTML_field($field, $options) {
 }
 
 function is_convertible_in_HTML_input($mytype) {
-    return in_array($mytype, array('text', 'password', 'email', 'postal_code', 'date'));
+    return in_array($mytype, array('text', 'password', 'email', 'postal_code', 'date', 'number'));
 }
 
 function get_mytype_HTML_pattern($mytype) {
@@ -59,12 +59,14 @@ function get_mytype_HTML_pattern($mytype) {
 function get_wordpress_custom_field_type($mytype) {
     /**
      * This returns the wordpress type from the mytype (e.g. 'email' => 'string')
+     * Valid values are 'string', 'boolean', 'integer', and 'number'.
      */
     $corresp = array(
         'date' => 'string',
         'email' => 'string',
         'postal_code' => 'string',
         'text' => 'string',
+        'number' => 'integer',
     );
     if (isset($corresp[$mytype])) return $corresp[$mytype];
     else return $mytype;
@@ -77,7 +79,7 @@ function get_HTML_field_input_type($mytype) {
      */
     if (in_array($mytype, array('string', 'date', 'postal_code'))) {
         return 'text';
-    } else { // email => email
+    } else { // email => email, 'number' => 'number'
         return $mytype;
     }
 }
