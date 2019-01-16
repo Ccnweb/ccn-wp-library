@@ -100,6 +100,7 @@ jQuery(document).ready(function($) {
          * Récupère la valeur à envoyer par HTTP POST de l'élément HTML avec l'id el_id
          */
         let el = jQuery('#' + el_id);
+        if (!el) el = jQuery("input[name='"+el_id+"']:checked"); // dans le cas
 
         // si l'élément n'existe pas, c'est qu'il doit peut-être être calculé
         if (typeof custom_data_attributes[el_id] == 'function') {console.log('r', custom_data_attributes[el_id]()); return custom_data_attributes[el_id]();}

@@ -6,12 +6,17 @@
  * Here are some helper functions related to HTML fields rendering, <input>, <date>, ...
  * used in create-custom-post-type.php for example
  * 
+ * accepted field types = number, text, password, email, postal_code, date, tel, radio
+ * 
  */
+
+// require all html field partial renderers from "html_fields" folder
+require_once_all_regex(CCN_LIBRARY_PLUGIN_DIR . '/html_fields/');
 
 function create_HTML_field($field, $options) {
     $default_options = array(
-        'value' => '',
-        'label' => 'label', // 'label', 'placeholder', 'both'
+        'value' => '', // default initial value
+        'label' => 'label', // = 'label', 'placeholder', ou 'both'
         'required' => false, // si le champs est requis ou non
     );
     $options = assign_default($default_options, $options);
@@ -37,13 +42,28 @@ function create_HTML_field($field, $options) {
             name="'.$field['id'].'_field" 
             id="'.$field['id'].'_field" 
             class="postbox'.$ifdateclass.'" 
-            '.$ifdate.' 
-            '.$ifplaceholder.'
-            '.$ifregex.'
+            '.$ifdate.' '.$ifplaceholder.' '.$ifregex.'
             '.(($options['required']) ? ' required ' : '' ).'
             value="'.$options['value'].'" 
             '.$html_attributes.' />
         ';
+    
+    // case of radio input ($fields['options'] = ['$value' => '$label', 'option1' => 'Mon Option 1'])
+    } else if ($field['type'] == 'radio' && isset($field['options'])) {
+        
+        return render_HTML_radio($field, $options);
+        $html = '<div class="form-radio-container">';
+        $compteur = 1;
+        foreach ($field['options'] as $value => $label) {
+            $curr_id = $field['id'].'_field__'.$compteur;
+            $html .= '<div class="form-check">
+                        <input class="form-check-input" type="radio" name="'.$field['id'].'_field" id="'.$curr_id.'" value="'.$value.'" checked>
+                        <label class="form-check-label" for="'.$curr_id.'">'.$label.'</label>
+                    </div>';
+            $compteur++;
+        }
+        $html .= '</div>';
+        return $html;
 
     // other cases for more complex inputs todo...
     } else {
@@ -52,7 +72,7 @@ function create_HTML_field($field, $options) {
 }
 
 function is_convertible_in_HTML_input($mytype) {
-    return in_array($mytype, array('text', 'password', 'email', 'postal_code', 'date', 'number'));
+    return in_array($mytype, array('text', 'password', 'email', 'postal_code', 'date', 'number', 'tel'));
 }
 
 function get_mytype_HTML_pattern($mytype) {
@@ -62,6 +82,7 @@ function get_mytype_HTML_pattern($mytype) {
      */
     if      ($mytype == "postal_code")  {return "[0-9]{5}";}
     else if ($mytype == "date")         {return "[0-9]{2}-[0-9]{2}-[0-9]{4}";}
+    else if ($mytype == "tel")          {return "\+?[0-9]{10,11}";}
     else {return "";}
 }
 
@@ -75,10 +96,12 @@ function get_wordpress_custom_field_type($mytype) {
         'email' => 'string',
         'postal_code' => 'string',
         'text' => 'string',
+        'tel' => 'string',
         'number' => 'integer',
+        'radio' => 'string'
     );
     if (isset($corresp[$mytype])) return $corresp[$mytype];
-    else return $mytype;
+    else return 'string';
 }
 
 function get_HTML_field_input_type($mytype) {
@@ -88,7 +111,7 @@ function get_HTML_field_input_type($mytype) {
      */
     if (in_array($mytype, array('string', 'date', 'postal_code'))) {
         return 'text';
-    } else { // email => email, 'number' => 'number'
+    } else { // email => email, 'number' => 'number', 'tel' => 'tel', 'radio' => 'radio'
         return $mytype;
     }
 }

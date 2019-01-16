@@ -8,6 +8,8 @@
  * Pour créer des custom fields avec une metabox :
  * Il faut utiliser la fonction "create_custom_post_fields"
  * 
+ * helpful sources : https://premium.wpmudev.org/blog/creating-meta-boxes/
+ * 
  */
 
 
@@ -78,20 +80,25 @@ function create_custom_post_key($cp_name, $f) {
 // 2. Creates a meta box for a custom post
 function create_custom_post_metabox($cp_name, $metabox_title, $prefix, $fields) {
     $metabox = function() use ($cp_name, $prefix, $fields, $metabox_title) {
+        
+        // make sure the form request comes from WordPress
+	    //wp_nonce_field( basename( __FILE__ ), $metabox_title );
+
         $metabox_html = function($post) use ($prefix, $fields) {
             ?>
             <div class="<?php echo $prefix; ?>_custom_metabox" style="display:flex;flex-direction:column">
 
                 <?php /* on insère chaque field */
                 foreach ($fields as $field):
-                $value = get_post_meta($post->ID, $field["id"], true); // le nom de la metakey
-                $label = (array_key_exists('html_label', $field)) ? $field['html_label'] : $field['id']; // le label du champs html
-                ?>
 
-                <div class="metabox_field_container">
-                    <label for="<?php echo $field['id']; ?>_field"><?php echo $label; ?></label>
-                    <?php echo create_HTML_field($field, array('value' => $value)); ?>
-                </div>
+                    $value = get_post_meta($post->ID, $field["id"], true); // le nom de la metakey
+                    $label = (array_key_exists('html_label', $field)) ? $field['html_label'] : $field['id']; // le label du champs html
+                    ?>
+
+                    <div class="metabox_field_container">
+                        <label for="<?php echo $field['id']; ?>_field"><?php echo $label; ?></label>
+                        <?php echo create_HTML_field($field, array('value' => $value)); ?>
+                    </div>
 
                 <?php endforeach; ?>
 
@@ -101,7 +108,7 @@ function create_custom_post_metabox($cp_name, $metabox_title, $prefix, $fields) 
 
         add_meta_box(
             $cp_name.'_custom_metabox', // Unique ID
-            $metabox_title,         // Box title
+            $metabox_title,             // Box title
             $metabox_html,              // Content callback, must be of type callable
             $cp_name,                   // Post type
             'advanced',                 // $context (default = 'advanced')
@@ -109,12 +116,15 @@ function create_custom_post_metabox($cp_name, $metabox_title, $prefix, $fields) 
         );
     };
 
-    add_action('add_meta_boxes', $metabox);
+    add_action('add_meta_boxes_'.$cp_name, $metabox);
 }
 
 // 3. Creates all the necessary cbks to save data from metaboxes
 function create_custom_post_savecbk($cp_name, $fields) {
     $save_data = function($post_id) use ($fields) {
+
+        // Check the user's permissions.
+        if ( !current_user_can('edit_post', $post_id) ) return;
 
         foreach ($fields as $f) {
             $field_id = $f['id'].'_field';
@@ -123,13 +133,13 @@ function create_custom_post_savecbk($cp_name, $fields) {
                 update_post_meta(
                     $post_id,
                     $f['id'],
-                    $_POST[$field_id]
+                    sanitize_text_field($_POST[$field_id])
                 );
             }
         }
     };
 
-    add_action('save_post', $save_data);
+    add_action('save_post_'.$cp_name, $save_data);
 }
 
 // 4. Adds some fields as columns in the "list" view in admin panel

@@ -23,9 +23,37 @@ function parseTemplateString($raw_str, $data) {
 
 
 /* ==================================== */
+/*     CHARGEMENT DE FICHIERS PHP       */
+/* ==================================== */
+
+if (!function_exists('require_once_all_regex')):
+function require_once_all_regex($dir_path, $regex = "") {
+    /**
+     * Require once all files in $dir_path that have a filename matching $regex
+     * 
+     * @param string $dir_path
+     * @param string $regex
+     */
+
+    if ($regex == "") $regex = "//";
+
+    foreach (scandir($dir_path) as $filename) {
+        $path = $dir_path . '/' . $filename;
+        if ($filename[0] != '.' && is_file($path) && preg_match("/\.php$/i", $path) == 1 && preg_match($regex, $filename) == 1) {
+            require_once $path;
+        } else if ($filename[0] != '.' && is_dir($path)) {
+            require_once_all_regex($path, $regex);
+        }
+    }
+}
+endif;
+
+
+/* ==================================== */
 /*     LOW-LEVEL USEFUL FUNCTIONS       */
 /* ==================================== */
 
+if (!function_exists('array_map_assoc')):
 function array_map_assoc($arr, $cbk) {
     /**
      * Comme array_map mais pour les tableaux associatifs
@@ -40,17 +68,21 @@ function array_map_assoc($arr, $cbk) {
     }
     return $new_arr;
 }
+endif;
 
 // It assigns values of $el2 to $el1.
 // $el1 and $el2 are assoc arrays
+if (!function_exists('assign_default')):
 function assign_default($el1, $el2) {
     foreach ($el2 as $k2 => $v2) {
         $el1[$k2] = $v2;
     }
     return $el1;
 }
+endif;
 
 // extracts the fields in $fields from the assoc array $arr
+if (!function_exists('extract_fields')):
 function extract_fields($arr, $fields) {
     $new_arr = array();
     foreach ($fields as $field) {
@@ -58,5 +90,6 @@ function extract_fields($arr, $fields) {
     }
     return $new_arr;
 }
+endif;
 
 ?>

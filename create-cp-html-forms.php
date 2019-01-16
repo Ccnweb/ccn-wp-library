@@ -32,7 +32,7 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields) {
     foreach($fields as $f) {
         $label = (array_key_exists('html_label', $f)) ? $f['html_label'] : $f['id']; // le label du champs html
         $iflabel = (in_array($options['label'], array('label', 'both'))) ? '<label for="'.$f['id'].'_field"></label>' : ''; // élément <label> affiché uniquement si $options['label'] = 'label'
-        $iferror = '<div class="form-error-msg">Le champs est invalide !</div>';
+        $iferror = '<div class="invalid-feedback">Le champs est invalide !</div>';
 
         $html .= 
             '<div class="field-container">
@@ -44,7 +44,7 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields) {
 
     $html .= '
         <div class="submit-btn-container">
-            <button id="'.$action_name.'_submit" type="button">'.$options['submit_btn_text'].'</button>
+            <button id="'.$action_name.'_submit" class="btn btn-primary" type="button">'.$options['submit_btn_text'].'</button>
         </div>
     ';
     $html .= '</form>';
@@ -54,12 +54,14 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields) {
     $js_script = '<script type="text/javascript">';
     $js_tpl_raw = file_get_contents(CCN_LIBRARY_PLUGIN_DIR . 'js/forms-template.js.tpl');
 
+    // préparation des données à injecter
     $custom_data_attributes = array_map_assoc($options['computed_fields'], function ($key, $value) {
         return "'{$key}_field': $value";
     });
     $fields_array = array_map(function($f) {return $f['id'];}, $fields);
     $fields_array = array_merge($fields_array, array_keys($options['computed_fields']));
 
+    // les données à injecter dans le js
     $data = array(
         'action_name' => $action_name,
         'fields_array' => '["'.implode('", "', $fields_array).'"]',
