@@ -59,8 +59,17 @@ jQuery(document).ready(function($) {
             '{{ajax_url}}',
             data, 
             function(raw_json) {
-                let json_response = JSON.parse(raw_json)
+                let json_response;
+                if (raw_json === null || raw_json == '') {console.log('Empty response from {{ajax_url}}'); return false}
+                if (raw_json === 'null') {console.log('Server responded with string "null" lol'); return false}
+                try {
+                    json_response = JSON.parse(raw_json)
+                } catch (e) {
+                    console.log("Unable to parse JSON response, invalid JSON", e, "raw_json=", raw_json);
+                    return false;
+                }
                 console.log("response jquery post = ", json_response);
+                
                 jQuery('#{{action_name}}_submit').html(submit_btn_html);
                 if (!json_response['success'] && post_error_messages[json_response['errno']]) {
                     toastr.error(post_error_messages[json_response['errno']])
@@ -74,7 +83,9 @@ jQuery(document).ready(function($) {
                 }
                 return false;
             }
-        );
+        ).fail(function() {
+            alert( "error" );
+          });
     });
 
     // ===========================================
@@ -110,6 +121,8 @@ jQuery(document).ready(function($) {
         let tagname = el.prop('tagName');
         if (tagname == 'INPUT') {
             return el.val()
+        } else if (tagname == 'TEXTAREA') {
+            return el.val().trim();
         }
         return 'unknown_tagname ' + tagname;
     }

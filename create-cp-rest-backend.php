@@ -23,6 +23,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
     $validation = new Ccn_Validator();
     $action_name = $prefix.'_'.$soft_action_name;
     $html_email_models_dir = CCN_LIBRARY_PLUGIN_DIR . '/email_models';
+    $final_response = ''; // le json final qui sera renvoyé
 
     $default_options = array(
         'send_email' => array(), // (no email sent by default) array of arrays with elements like array('addresses' => array('coco@example.com'), 'subject' => 'id_of_subject_field', 'model' => 'path_to_html_email_model')
@@ -31,7 +32,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
     );
     $options = assign_default($default_options, $options);
 
-    $backend_callback = function() use ($cp_id, $fields, $validation) {
+    $backend_callback = function() use ($cp_id, $fields, $validation, $options) {
         // == 1. == sanitize the inputs
         $sanitized = array();
         $meta_keys = array();
@@ -47,6 +48,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
 
         
         if (post_type_exists($cp_id)) {
+            
             // == 2. == on vérifie que les fields uniques sont bien uniques
             // on récupère tous les posts de type $cp_id
             $liste_inscriptions = query_posts(array('post_type' => $cp_id));
@@ -74,15 +76,18 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
 
                 if ($res == 0) {
                     echo json_encode(array('success' => false, 'errno' => 'POST_CREATION_FAILED', 'descr' => 'Impossible de créer un post de type '.$cp_id.' avec les paramètres fournis :('));
+                    die();
                 } else {
-                    echo json_encode(array('success' => true, 'id' => $res));
+                    $final_response = array('success' => true, 'id' => $res, 'create_post' => true, 'email' => false);
                 }
             }
         }
-
-        // == 4. == on envoie un email éventuellement
+        
         if (count($options['send_email'] > 0)) {
+
+            // == 4. == on envoie un email éventuellement
             foreach ($options['send_email'] as $email_obj) {
+                
                 // à qui on envoie l'email
                 $to = $email_obj['addresses'];
                 
@@ -97,7 +102,22 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
                 }
 
                 // envoi du mail...
-                wp_mail($to, $subject, $message); // https://developer.wordpress.org/reference/functions/wp_mail/
+                $sent_successfully = wp_mail($to, $subject, $message); // https://developer.wordpress.org/reference/functions/wp_mail/
+
+                if ($sent_successfully) {
+                    if (isset($final_response['success'])) $final_response['email'] = true;
+                    else $final_response = array('success' => true, 'id' => 'unknown', 'create_post' => 'unknown', 'email' => true);
+                } else {
+                    if (isset($final_response['success'])) {
+                        $final_response['success'] = false;
+                        $final_response['errno'] = 'EMAIL_SEND_FAILED';
+                        $final_response['descr'] = 'Impossible to send an email to '.json_encode($to);
+                        echo json_encode($final_response);
+                    } else {
+                        echo json_encode(array('success' => false, 'errno' => 'EMAIL_SEND_FAILED', 'descr' => 'Impossible to send an email to '.json_encode($to)));
+                    }
+                    die();
+                }
             }
 
             // on envoie aussi l'email à l'utilisateur lui-même éventuellement
@@ -107,6 +127,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
             }
         }
 
+        echo json_encode($final_response);
         die();
     };
 

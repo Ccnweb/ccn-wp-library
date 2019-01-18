@@ -10,7 +10,7 @@ require_once 'create-cp-html-forms.php';
  */
 
 function ccnlib_register_contact_form($options = array()) {
-    $prefix = 'ccnlib_contactform';
+    $prefix = 'ccnlib';
 
     $default_options = array(
         'shortcode_name' => 'contact', // le nom du shortcode final sera {shortcode_name}-show-form
@@ -57,8 +57,10 @@ function ccnlib_register_contact_form($options = array()) {
     // on crée le backend pour recevoir le POST du formulaire et envoyer le mail
     $options = array(
         'send_email' => array(
-            'addresses' => array('carlo.bauge@gmail.com'),
-            'subject' => 'Louez le Seigneur en tous temps !',
+            array(
+                'addresses' => array('carlo.bauge@gmail.com'),
+                'subject' => 'Louez le Seigneur en tous temps !',
+            )
         ),
         'send_to_user' => '',
         'create_post' => false
