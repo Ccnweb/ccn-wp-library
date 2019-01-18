@@ -5,7 +5,9 @@ require_once('create-cp-html-fields.php');
 
 function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields) {
     /**
-     * Creates a HTML form and registers it as a shortcode
+     * Creates an HTML form and registers it as a shortcode
+     * 
+     * TODO: argument $cp_id is not used !
      */
 
     $default_options = array(
@@ -79,6 +81,9 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields) {
         return $html;
     };
     add_shortcode( $action_name.'-show-form', $render_html);
+
+
+    // TODO create backend to send email on contact submit in frontend
 
 }
 

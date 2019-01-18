@@ -50,22 +50,10 @@ function create_HTML_field($field, $options) {
     
     // case of radio input ($fields['options'] = ['$value' => '$label', 'option1' => 'Mon Option 1'])
     } else if ($field['type'] == 'radio' && isset($field['options'])) {
-        
         return render_HTML_radio($field, $options);
-        $html = '<div class="form-radio-container">';
-        $compteur = 1;
-        foreach ($field['options'] as $value => $label) {
-            $curr_id = $field['id'].'_field__'.$compteur;
-            $html .= '<div class="form-check">
-                        <input class="form-check-input" type="radio" name="'.$field['id'].'_field" id="'.$curr_id.'" value="'.$value.'" checked>
-                        <label class="form-check-label" for="'.$curr_id.'">'.$label.'</label>
-                    </div>';
-            $compteur++;
-        }
-        $html .= '</div>';
-        return $html;
-
     // other cases for more complex inputs todo...
+    } else if ($field['type'] == 'textarea') {
+        return render_HTML_textarea($field, $options);
     } else {
         die("Cannot render type ".$field['type'].' in HTML');
     }
