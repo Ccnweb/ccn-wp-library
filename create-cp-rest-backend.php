@@ -23,7 +23,6 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
     $validation = new Ccn_Validator();
     $action_name = $prefix.'_'.$soft_action_name;
     $html_email_models_dir = CCN_LIBRARY_PLUGIN_DIR . '/email_models';
-    $final_response = ''; // le json final qui sera renvoyé
 
     $default_options = array(
         'send_email' => array(), // (no email sent by default) array of arrays with elements like array('addresses' => array('coco@example.com'), 'subject' => 'id_of_subject_field', 'model' => 'path_to_html_email_model', 'model_args' => array('title' => 'Merci de nous contacter'))
@@ -32,7 +31,9 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
     );
     $options = assign_default($default_options, $options);
 
-    $backend_callback = function() use ($cp_id, $fields, $validation, $options) {
+    $backend_callback = function() use ($cp_id, $fields, $validation, $html_email_models_dir, $options) {
+        $final_response = ''; // le json final qui sera renvoyé
+
         // == 1. == sanitize the inputs
         $sanitized = array();
         $meta_keys = array();
