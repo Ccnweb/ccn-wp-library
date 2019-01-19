@@ -2,13 +2,18 @@
 /**
 * Plugin Name: CCN Librairie
 * Description: Librairie de fonctions pour aider à créer des plugins Wordpress pour les sites de la Communauté du Chemin Neuf
-* Version: 1.5.2
+* Version: 1.5.3
 * Author: Communauté du Chemin Neuf
 * GitHub Plugin URI: https://github.com/Ccnweb/ccn-wp-library.git
 */
 
 define( 'CCN_LIBRARY_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
+// on utilise des emails au format HTML
+function ccnlib_set_content_type(){
+    return "text/html";
+}
+add_filter( 'wp_mail_content_type','ccnlib_set_content_type' );
 
 // charge le fichier subscribe.js qui enverra les infos du formulaire via AJAX
 function ccnlib_scripts() {
@@ -31,6 +36,5 @@ function ccnlib_scripts() {
 add_action( 'wp_enqueue_scripts', 'ccnlib_scripts');
 
 require_once 'create-contact-form.php';
-
 
 ?>
