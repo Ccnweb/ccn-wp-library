@@ -16,6 +16,16 @@ function ccnlib_register_contact_form($options = array()) {
         'shortcode_name' => 'contact', // le nom du shortcode final sera {shortcode_name}-show-form
         'textarea_rows' => 5, // nombre de lignes dans la textarea du message
         'fields' => array('nom', 'prenom', 'email', 'message'), // les champs qui appraitront dans le formulaire de contact
+        'send_email' => array(
+            array(
+                'addresses' => array('web@chemin-neuf.org'),
+                'subject' => 'Nouvelle demande de contact de {{'.$prefix.'_key_firstname}} {{'.$prefix.'_key_name}}',
+                'model' => 'simple_contact.html',
+                'model_args' => array(
+                    'title' => 'Que le Seigneur vous donne sa paix !',
+                ),
+            )
+        ),
     );
     $options = assign_default($default_options, $options);
 
@@ -56,13 +66,8 @@ function ccnlib_register_contact_form($options = array()) {
 
     // on crée le backend pour recevoir le POST du formulaire et envoyer le mail
     $options = array(
-        'send_email' => array(
-            array(
-                'addresses' => array('carlo.bauge@gmail.com'),
-                'subject' => 'Louez le Seigneur en tous temps !',
-            )
-        ),
-        'send_to_user' => '',
+        'send_email' => $options['send_email'],
+        'send_to_user' => $prefix.'_key_email',
         'create_post' => false
     );
     create_POST_backend('', $prefix, $action_name, $accepted_users = 'all', $fields, $options);

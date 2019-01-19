@@ -15,9 +15,18 @@ function parseTemplateString($raw_str, $data) {
      */
 
     $parsed_str = $raw_str;
-    foreach ($data as $key => $value) {
+    /* foreach ($data as $key => $value) {
         $parsed_str = str_replace('{{'.$key.'}}', $value, $parsed_str);
+    } */
+    // on supprime les élément {{...}} restants
+    
+    $res = preg_match_all("/{{([^}]+)}}/", $raw_str, $matches);
+    if ($res === false || $res == 0) return $raw_str;
+    foreach ($matches[1] as $match) {
+        if (isset($data[$match])) $parsed_str = str_replace('{{'.$match.'}}', $data[$match], $parsed_str);
+        else $parsed_str = str_replace('{{'.$match.'}}', '', $parsed_str);
     }
+
     return $parsed_str;
 }
 
