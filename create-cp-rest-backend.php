@@ -117,7 +117,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
                         $message = file_get_contents($html_email_models_dir . '/' . $email_obj['model']);
                     // soit c'est lui-même le contenu du message
                     } else {
-                        $message = $email_obj['model'];
+                        $message = $email_obj['model'].'=='.$html_email_models_dir . '/' . $email_obj['model'];
                     }
 
                     // on parse le message/modèle au cas où il contient des {{...}}
