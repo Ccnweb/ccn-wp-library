@@ -1,4 +1,5 @@
 <?php
+namespace ccn\lib;
 
 /* ==================================== */
 /*           STRING PARSING             */
@@ -8,17 +9,13 @@ function parseTemplateString($raw_str, $data) {
     /**
      * replace containers like {{coco}} in $raw_str by the value of $data['coco']
      * 
-     * @param string $raw_str   The raw string containing containers like {{coco}}
-     * @param string $data      The assoc. array containing the data to be inserted in $raw_str
+     * @param string $raw_str     The raw string containing containers like {{coco}}
+     * @param string $data              The assoc. array containing the data to be inserted in $raw_str
      * 
-     * @return string The string $raw_str parsed with data from $data
+     * @return string                   The string $raw_str parsed with data from $data
      */
 
     $parsed_str = $raw_str;
-    /* foreach ($data as $key => $value) {
-        $parsed_str = str_replace('{{'.$key.'}}', $value, $parsed_str);
-    } */
-    // on supprime les élément {{...}} restants
     
     $res = preg_match_all("/{{([^}]+)}}/", $raw_str, $matches);
     if ($res === false || $res == 0) return $raw_str;
@@ -29,7 +26,6 @@ function parseTemplateString($raw_str, $data) {
 
     return $parsed_str;
 }
-
 
 /* ==================================== */
 /*     CHARGEMENT DE FICHIERS PHP       */

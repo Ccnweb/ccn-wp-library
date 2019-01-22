@@ -10,8 +10,10 @@
  * 
  */
 
+require_once('lib.php'); use \ccn\lib as lib;
+
 // require all html field partial renderers from "html_fields" folder
-require_once_all_regex(CCN_LIBRARY_PLUGIN_DIR . '/html_fields/');
+lib\require_once_all_regex(CCN_LIBRARY_PLUGIN_DIR . '/html_fields/');
 
 function create_HTML_field($field, $options) {
     $default_options = array(
@@ -19,7 +21,7 @@ function create_HTML_field($field, $options) {
         'label' => 'label', // = 'label', 'placeholder', ou 'both'
         'required' => false, // si le champs est requis ou non
     );
-    $options = assign_default($default_options, $options);
+    $options = lib\assign_default($default_options, $options);
 
     // case of simple HTML input elements
     if (is_convertible_in_HTML_input($field['type'])) {
@@ -35,7 +37,7 @@ function create_HTML_field($field, $options) {
         $ifdateclass = ($field['type'] == 'date') ? ' datepicker-here' : '';
         
         // specific html attributes
-        $html_attributes = (isset($field['html_attributes'])) ? implode(' ', array_map_assoc($field['html_attributes'], function($k, $v) {return $k.'="'.str_replace('"','\"', $v).'"';})) : '';
+        $html_attributes = (isset($field['html_attributes'])) ? implode(' ', lib\array_map_assoc($field['html_attributes'], function($k, $v) {return $k.'="'.str_replace('"','\"', $v).'"';})) : '';
 
         return '
         <input type="'.get_HTML_field_input_type($field['type']).'" 

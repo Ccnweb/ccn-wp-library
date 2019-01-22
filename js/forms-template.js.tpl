@@ -81,6 +81,10 @@ jQuery(document).ready(function($) {
                     toastr.success('C\'est bon tout s\'est bien passé ! Merci Seigneur !');
 
                 }
+                
+                // on remet les champs à zéro
+                for (field_id of fields_array) resetVal(`${field_id}_field`);
+
                 return false;
             }
         ).fail(function() {
@@ -125,6 +129,13 @@ jQuery(document).ready(function($) {
             return el.val().trim();
         }
         return 'unknown_tagname ' + tagname;
+    }
+
+    function resetVal(el_id) {
+        /**
+         * Remet à zéro la valeur du champs
+         */
+        jQuery('#' + el_id).val('');
     }
 
 });

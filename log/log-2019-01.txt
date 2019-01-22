@@ -1,0 +1,3 @@
+2019-01-22 12:32:52 ::ERROR::TITRE:: ["Louez ","le ","Seigneur !"]
+2019-01-22 12:33:15 ::ERROR::TITRE:: Lodate Dio voi tutti servi suoi !!!
+2019-01-22 12:33:29 ::ERROR::TITRE:: ["Louez ","le ","Seigneur !"]

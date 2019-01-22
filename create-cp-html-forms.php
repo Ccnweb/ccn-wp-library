@@ -1,6 +1,6 @@
 <?php
 
-require_once('lib.php');
+require_once('lib.php'); use \ccn\lib as lib;
 require_once('create-cp-html-fields.php');
 
 function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields) {
@@ -57,7 +57,7 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields) {
     $js_tpl_raw = file_get_contents(CCN_LIBRARY_PLUGIN_DIR . 'js/forms-template.js.tpl');
 
     // préparation des données à injecter
-    $custom_data_attributes = array_map_assoc($options['computed_fields'], function ($key, $value) {
+    $custom_data_attributes = lib\array_map_assoc($options['computed_fields'], function ($key, $value) {
         return "'{$key}_field': $value";
     });
     $fields_array = array_map(function($f) {return $f['id'];}, $fields);
@@ -71,7 +71,7 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields) {
         'custom_data_attributes' => "{".implode(',\n', $custom_data_attributes)."}",
     );
 
-    $js_parsed = parseTemplateString($js_tpl_raw, $data);
+    $js_parsed = lib\parseTemplateString($js_tpl_raw, $data);
     $js_script .= $js_parsed.'</script>';
 
     $html .= $js_script;

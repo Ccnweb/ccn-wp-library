@@ -12,22 +12,43 @@ require_once 'create-cp-html-forms.php';
 function ccnlib_register_contact_form($options = array()) {
     $prefix = 'ccnlib';
 
+    // this function will create automatically an HTML parsed version of the field 'ccnlib_key_message'
+    $create_HTML_message = function($post_data) {
+        return (isset($post_data['ccnlib_key_message'])) ? str_replace("\n", "<br>", $post_data['ccnlib_key_message']) : 'unknown key ccnlib_key_message';
+    };
+
     $default_options = array(
         'shortcode_name' => 'contact', // le nom du shortcode final sera {shortcode_name}-show-form
+        'label' => 'placeholder', // 'placeholder' || 'label' || 'both'
         'textarea_rows' => 5, // nombre de lignes dans la textarea du message
         'fields' => array('nom', 'prenom', 'email', 'message'), // les champs qui appraitront dans le formulaire de contact
         'send_email' => array(
             array(
-                'addresses' => array('web@chemin-neuf.org'),
-                'subject' => 'Nouvelle demande de contact de {{'.$prefix.'_key_firstname}} {{'.$prefix.'_key_name}}',
-                'model' => 'simple_contact.html',
-                'model_args' => array(
-                    'title' => 'Que le Seigneur vous donne sa paix !',
+                'addresses'     => array('web@chemin-neuf.org'),
+                'subject'       => 'Nouvelle demande de contact de {{'.$prefix.'_key_firstname}} {{'.$prefix.'_key_name}}',
+                'model'         => 'simple_contact.html',
+                'model_args'    => array(
+                        'title'     => 'Que le Seigneur vous donne sa paix !',
+                        'subtitle'  => 'Louez Dieu en tous temps !',
+                        'body'      => 'Voici la demande de contact :<br>
+                                            <b>Prénom: </b>{{ccnlib_key_firstname}}<br>
+                                            <b>Nom: </b>{{ccnlib_key_name}}<br>
+                                            <b>Email: </b>{{ccnlib_key_email}}<br>
+                                            {{message_HTML}}<br>',
+                ),
+                'computed_data' => array(
+                    'message_HTML' => $create_HTML_message,
                 ),
             )
         ),
     );
     $options = assign_default($default_options, $options);
+
+    // pour chaque élément de $options['send_email'], on ajoute la computed_data 'message_HTML' si elle n'existe pas
+    foreach ($options['send_email'] as &$element) {
+        if (!isset($element['computed_data'])) $element['computed_data'] = array();
+        if (!isset($element['computed_data']['message_HTML'])) $element['computed_data']['message_HTML'] = $create_HTML_message;
+    }
 
     $all_fields = array(
         'prenom' => array( // Prénom
@@ -51,6 +72,7 @@ function ccnlib_register_contact_form($options = array()) {
         'message' => array( // Message
             'id' => $prefix.'_key_message',
             'type' => 'textarea',
+            'html_label' => 'Votre message',
             'rows' => $options['textarea_rows'],
         )
     );

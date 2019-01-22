@@ -14,7 +14,7 @@
 
 
 // we require here some low-level functions to help build this library
-require_once('lib.php');
+require_once('lib.php'); use \ccn\lib as lib;
 // we require some helpers to create HTML elements
 require_once('create-cp-html-fields.php');
 
@@ -40,7 +40,7 @@ function create_custom_post_fields($cp_name, $cp_slug, $metabox_opt, $prefix, $f
     $default_metabox_opt = array(
         'title' => 'Données '.$cp_name
     );
-    $metabox_opt = assign_default($default_metabox_opt, $metabox_opt);
+    $metabox_opt = lib\assign_default($default_metabox_opt, $metabox_opt);
 
     // 1. on crée les metakeys
     foreach ($fields as $f) {
@@ -67,12 +67,12 @@ function create_custom_post_key($cp_name, $f) {
         'single'       => true, // Return a single value of the type.
         'show_in_rest' => true,
     );
-    $attributes = assign_default($default_f, $f);
+    $attributes = lib\assign_default($default_f, $f);
     
     // we register the meta field
     $post_meta_args = array("type", "description", "single", "show_in_rest");
     $attributes['type'] = get_wordpress_custom_field_type($attributes['type']);
-    $args = extract_fields($attributes, $post_meta_args);
+    $args = lib\extract_fields($attributes, $post_meta_args);
     register_post_meta( $cp_name, $f['id'], $args );
 }
 
