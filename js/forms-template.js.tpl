@@ -93,6 +93,30 @@ jQuery(document).ready(function($) {
     });
 
     // ===========================================
+    //          RUN SPECIFIC LOGIC
+    // ===========================================
+
+    {{logic_rules}}
+    /* let logic = TODO_ajouter_accolades_icilogic_rules}}
+
+    // on enregistre les événements de logic :
+    let global_actions = []; // actions à effectuer pour chaque changement sur n'importe quel champs du formulaire
+    for (let rule of logic) {
+        if (rule.trigger) {
+            if ($(rule.trigger.selector).length && rule.trigger.event) {
+                $(rule.trigger.selector).on()
+            } else {
+                console.log('unknown trigger structure ', rule.trigger)
+            }
+        } else { // action globale
+            if (rule.action && typeof rule.action == 'function') global_actions.push(rule.action);
+        }
+    }
+    // on enregistre les actions globales
+    $("form :input").change(function() {for (let action of glob_actions) action()}); */
+    
+
+    // ===========================================
     //          HELPER FUNCTIONS
     // ===========================================
     function validateForm(fields_array) {
@@ -115,7 +139,7 @@ jQuery(document).ready(function($) {
          * Récupère la valeur à envoyer par HTTP POST de l'élément HTML avec l'id el_id
          */
         let el = jQuery('#' + el_id);
-        if (!el) el = jQuery("input[name='"+el_id+"']:checked"); // dans le cas
+        if (!el) el = jQuery("input[name='"+el_id+"']:checked"); // dans le cas d'une checkbox
 
         // si l'élément n'existe pas, c'est qu'il doit peut-être être calculé
         if (typeof custom_data_attributes[el_id] == 'function') {console.log('r', custom_data_attributes[el_id]()); return custom_data_attributes[el_id]();}

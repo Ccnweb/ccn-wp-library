@@ -2,6 +2,16 @@
 namespace ccn\lib;
 
 /* ==================================== */
+/* CRÉE UN TAG <script> pour injecter du JS qqe part */
+/* ==================================== */
+
+function get_js_script($js_template_path, $data) {
+    $js_tpl_raw = file_get_contents($js_template_path);
+    $js_parsed = parseTemplateString($js_tpl_raw, $data);
+    return '<script type="text/javascript">'.$js_parsed.'</script>';
+}
+
+/* ==================================== */
 /*           STRING PARSING             */
 /* ==================================== */
 

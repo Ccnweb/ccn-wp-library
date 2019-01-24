@@ -2,7 +2,7 @@
 /**
 * Plugin Name: CCN Librairie
 * Description: Librairie de fonctions pour aider à créer des plugins Wordpress pour les sites de la Communauté du Chemin Neuf
-* Version: 1.6.0
+* Version: 1.6.1
 * Author: Communauté du Chemin Neuf
 * GitHub Plugin URI: https://github.com/Ccnweb/ccn-wp-library.git
 */
@@ -34,6 +34,13 @@ function ccnlib_scripts() {
 
 }
 add_action( 'wp_enqueue_scripts', 'ccnlib_scripts');
+
+function ccnlib_admin_scripts() {
+    wp_enqueue_script('ccnlib-datepicker-script', 'https://cdnjs.cloudflare.com/ajax/libs/air-datepicker/2.2.3/js/datepicker.min.js', array(), '20190107', true);
+    wp_enqueue_script('ccnlib-datepicker-lang-script', 'https://cdnjs.cloudflare.com/ajax/libs/air-datepicker/2.2.3/js/i18n/datepicker.fr.min.js', array(), '20190107', true);
+    wp_enqueue_style('ccnlib-datepicker-style', 'https://cdnjs.cloudflare.com/ajax/libs/air-datepicker/2.2.3/css/datepicker.min.css', array(), '20190107', 'all');
+}
+add_action( 'admin_enqueue_scripts', 'ccnlib_admin_scripts' );
 
 require_once 'create-contact-form.php';
 

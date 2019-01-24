@@ -16,6 +16,7 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields) {
         'label' => 'both', // 'label' || 'placeholder' indique si le label des champs et insérer en tant que <label> ou dans le placeholder
         'required' => array(), // list des id des champs requis
         'computed_fields' => array(), // ici on définit les champs calculé, par ex 'post_title' => "() => getVal('wpsubs_key_name')"
+        'custom_logic_path' => '', // chemin ABSOLU vers un fichier .js qui contient la liste des règles JS spécifiques pour les formulaires complexes
     );
     $options = assign_default($default_options, $options);
 
@@ -62,17 +63,20 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields) {
     });
     $fields_array = array_map(function($f) {return $f['id'];}, $fields);
     $fields_array = array_merge($fields_array, array_keys($options['computed_fields']));
+    // import de la logique métier pour les formulaires complexes
+    $custom_logic = ($options['custom_logic_path'] && file_exists($options['custom_logic_path'])) ? file_get_contents($options['custom_logic_path']) : '[];';
 
     // les données à injecter dans le js
     $data = array(
-        'action_name' => $action_name,
-        'fields_array' => '["'.implode('", "', $fields_array).'"]',
-        'ajax_url' => admin_url( 'admin-ajax.php' ),
-        'custom_data_attributes' => "{".implode(',\n', $custom_data_attributes)."}",
+        'action_name'               => $action_name,
+        'fields_array'              => '["'.implode('", "', $fields_array).'"]',
+        'ajax_url'                  => admin_url( 'admin-ajax.php' ),
+        'custom_data_attributes'    => "{".implode(',\n', $custom_data_attributes)."}",
+        'logic_rules'               => $custom_logic,
     );
 
     $js_parsed = lib\parseTemplateString($js_tpl_raw, $data);
-    $js_script .= $js_parsed.'</script>';
+    $js_script .= $js_parsed.'</script>'; // TODO réécrire avec la fonction lib\get_js_script()
 
     $html .= $js_script;
 

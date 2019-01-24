@@ -32,7 +32,8 @@ function write($level, $title, $data, $category = "") {
     // on écrit le message
     $msg = $curr_log_date.' ::'.$level.'::'.$title.':: '.$body."\n";
 
-    return file_force_contents($log_path, $msg);
+    // TODO créer les dossiers inexistants éventuellement
+    return file_put_contents($log_path, $msg, FILE_APPEND | LOCK_EX);//file_force_contents($log_path, $msg);
 }
 
 function error($title = "", $data = "") {
@@ -49,11 +50,15 @@ function info($title = "", $data = "") {
 
 // crée tous les dossiers nécessaires pour que le chemin vers le dossier $dir existe
 function file_force_contents($dir, $contents){
+    /**
+     * NE MARCHE PAS !!!!
+     */
     $parts = explode('/', $dir);
     $file = array_pop($parts);
     $dir = '';
-    foreach($parts as $part)
-        if(!is_dir($dir .= "/$part")) mkdir($dir);
+    foreach ($parts as $part)
+        $a = $dir."/$part";
+        if (!is_dir($dir .= "/$part")) mkdir($dir);
     return file_put_contents("$dir/$file", $contents, FILE_APPEND | LOCK_EX);
 }
 ?>

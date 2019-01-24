@@ -15,6 +15,12 @@
 
 // we require here some low-level functions to help build this library
 require_once('lib.php'); use \ccn\lib as lib;
+require_once('log.php'); use \ccn\lib\log as log;
+
+// require all html field partial renderers from "html_fields" folder
+lib\require_once_all_regex(CCN_LIBRARY_PLUGIN_DIR . '/html_fields/');
+use \ccn\lib\html_fields as fields;
+
 // we require some helpers to create HTML elements
 require_once('create-cp-html-fields.php');
 
@@ -29,7 +35,7 @@ function create_custom_post_fields($cp_name, $cp_slug, $metabox_opt, $prefix, $f
     /**
      * @param string $cp_name       The name of the custom post (pour l'instant je ne garantis rien si c'est en plusieurs mots)
      * @param string $cp_slug       The slug of the custom post
-     * @param string $metabox_opt   Array containing some options for the metabox in admin ui (title, ...)
+     * @param array $metabox_opt    Array containing some options for the metabox in admin ui (title, ...)
      * @param string $prefix        The prefix used to namespace all variables, css classes etc. (e.g. "moncustompost")
      * @param array  $fields        The array of fields that will be added as custom fields to your custom post type
      * 
@@ -38,7 +44,11 @@ function create_custom_post_fields($cp_name, $cp_slug, $metabox_opt, $prefix, $f
      */
 
     $default_metabox_opt = array(
-        'title' => 'Données '.$cp_name
+        array(
+            'condition' => '1 == 1', // la condition à laquelle cette metabox doit s'affiche
+            'title' => 'Informations préliminaires',
+            'fields' => 'ALL', // 'ALL' ou array des champs id à mettre dans la metabox
+        ),
     );
     $metabox_opt = lib\assign_default($default_metabox_opt, $metabox_opt);
 
@@ -47,8 +57,16 @@ function create_custom_post_fields($cp_name, $cp_slug, $metabox_opt, $prefix, $f
         create_custom_post_key($cp_name, $f);
     }
 
-    // 2. on crée la metabox avec tous les fields
-    create_custom_post_metabox($cp_name, $metabox_opt['title'], $prefix, $fields);
+    // 2. on crée les metaboxes avec tous les fields
+    foreach ($metabox_opt as $curr_metabox) {
+        $curr_fields = $fields;
+        if ($curr_metabox['fields'] !== 'ALL') {
+            $curr_fields = array_filter($fields, function($el) use ($curr_metabox) {
+                return in_array($el['id'], $curr_metabox['fields']);
+            });
+        }
+        create_custom_post_metabox($cp_name, $curr_metabox, $prefix, $curr_fields);
+    }
 
     // 3. on crée la callback de sauvegarde des données de la metabox
     create_custom_post_savecbk($cp_name, $fields);
@@ -73,18 +91,27 @@ function create_custom_post_key($cp_name, $f) {
     $post_meta_args = array("type", "description", "single", "show_in_rest");
     $attributes['type'] = get_wordpress_custom_field_type($attributes['type']);
     $args = lib\extract_fields($attributes, $post_meta_args);
-    register_post_meta( $cp_name, $f['id'], $args );
+
+    if ($f['type'] == 'nom_prenom') {
+        register_post_meta( $cp_name, $f['id'].'_firstname', $args );
+        register_post_meta( $cp_name, $f['id'].'_name', $args );
+    // TODO cas des champs à préciser pour les radio buttons
+    } else {
+        register_post_meta( $cp_name, $f['id'], $args );
+    }
 }
 
 
 // 2. Creates a meta box for a custom post
-function create_custom_post_metabox($cp_name, $metabox_title, $prefix, $fields) {
-    $metabox = function() use ($cp_name, $prefix, $fields, $metabox_title) {
+function create_custom_post_metabox($cp_name, $metabox, $prefix, $fields) {
+    $metabox_fun = function() use ($cp_name, $prefix, $fields, $metabox) {
+
+        $metabox_id = $cp_name.'_custom_metabox_'.sanitize_title($metabox['title'], str_replace(' ', '-', $metabox['title']));
         
         // make sure the form request comes from WordPress
-	    //wp_nonce_field( basename( __FILE__ ), $metabox_title );
+	    //wp_nonce_field( basename( __FILE__ ), $metabox['title'] );
 
-        $metabox_html = function($post) use ($prefix, $fields) {
+        $metabox_html = function($post) use ($prefix, $fields, $metabox, $metabox_id) {
             ?>
             <div class="<?php echo $prefix; ?>_custom_metabox" style="display:flex;flex-direction:column">
 
@@ -93,22 +120,38 @@ function create_custom_post_metabox($cp_name, $metabox_title, $prefix, $fields) 
 
                     $value = get_post_meta($post->ID, $field["id"], true); // le nom de la metakey
                     $label = (array_key_exists('html_label', $field)) ? $field['html_label'] : $field['id']; // le label du champs html
+                    $curr_options = array('value' => $value);
+                    // si on est dans le cas d'un field complexe, on ajoute/modifie $value pour que le champs ait les bonnes valeurs
+                    if (function_exists('\ccn\lib\html_fields\get_value_from_db_'.$field['type'])) {
+                        $res = call_user_func('\ccn\lib\html_fields\get_value_from_db_'.$field['type'], $post, $field);
+                        if ($res === false) log\error('HTML_FIELD_RETRIEVE_DATA_FAILED', 'Failed to retrieve post data for field with id='.$field['id'].' of type '.$field['type'].' in post with id='.$post->ID);
+                        else $curr_options = lib\assign_default($curr_options, $res);
+                    }
                     ?>
 
                     <div class="metabox_field_container">
-                        <label for="<?php echo $field['id']; ?>_field"><?php echo $label; ?></label>
-                        <?php echo create_HTML_field($field, array('value' => $value)); ?>
+                        <!-- <label for="<?php echo $field['id']; ?>_field"><?php echo $label; ?></label> -->
+                        <?php echo create_HTML_field($field, $curr_options); ?>
                     </div>
 
                 <?php endforeach; ?>
 
             </div>
             <?php
+
+            // on injecte le javascript qu'il faut
+            if (isset($metabox['condition'])) {
+                $js_data = array(
+                    'condition_logic' => parse_js_condition($metabox_id, $metabox['condition']),
+                );
+                echo lib\get_js_script(CCN_LIBRARY_PLUGIN_DIR . 'js/metabox_template.js.tpl', $js_data);
+            }
+            
         };
 
         add_meta_box(
-            $cp_name.'_custom_metabox', // Unique ID
-            $metabox_title,             // Box title
+            $metabox_id, // Unique ID
+            $metabox['title'],             // Box title
             $metabox_html,              // Content callback, must be of type callable
             $cp_name,                   // Post type
             'advanced',                 // $context (default = 'advanced')
@@ -116,7 +159,7 @@ function create_custom_post_metabox($cp_name, $metabox_title, $prefix, $fields) 
         );
     };
 
-    add_action('add_meta_boxes_'.$cp_name, $metabox);
+    add_action('add_meta_boxes_'.$cp_name, $metabox_fun);
 }
 
 // 3. Creates all the necessary cbks to save data from metaboxes
@@ -135,6 +178,38 @@ function create_custom_post_savecbk($cp_name, $fields) {
                     $f['id'],
                     sanitize_text_field($_POST[$field_id])
                 );
+
+                // si c'est un champs complexe, on save aussi ce champs
+                // par exemple un radio button avec un champs à préciser 
+                // son id est construit comme suit : {$field['id']}_field_{$value}_preciser)
+                /* $field_a_preciser = $field_id.'_'.$_POST[$field_id].'_preciser';
+                if ($f['type'] == 'radio' && array_key_exists($field_a_preciser, $_POST)) {
+                    update_post_meta(
+                        $post_id,
+                        $f['id'].'_field_'.$_POST[$field_id].'_preciser',
+                        sanitize_text_field($_POST[$field_a_preciser])
+                    );
+                } */
+            }
+
+            // cas des champs complexes qui ont une fonction de sauvegarde particulière (cf nom_prenom.php ou radio.php par exemple)
+            if (function_exists('\ccn\lib\html_fields\save_field_to_db_'.$f['type'])) {
+                $res = call_user_func('\ccn\lib\html_fields\save_field_to_db_'.$f['type'], $f, $_POST);
+                if ($res === false) return log\error('HTML_FIELD_SAVE_DATA_FAILED', 'Failed to save post data for field with id='.$f['id'].' of type '.$f['type'].' in post with id='.$post_id);
+                if (gettype($res) !== 'array') return log\error('HTML_FIELD_SAVE_DATA_INVALID', 'Invalid post data to be saved, returned by the custom save function for field with id='.$f['id'].' of type '.$f['type'].' in post with id='.$post_id);
+                
+                // si tout s'est bien passé, on sauve ce qu'il faut
+                foreach ($res as $meta_key_id => $meta_key_value) {
+                    if (gettype($meta_key_id) !== 'string') log\error('HTML_FIELD_SAVE_DATA_INVALID_KEY', 'Invalid post data key to be saved (key is not a string but a '.gettype($meta_key_id).'), returned by the custom save function for field with id='.$f['id'].' of type '.$f['type'].' in post with id='.$post_id);
+                    else {
+                        update_post_meta(
+                            $post_id,
+                            $meta_key_id,
+                            sanitize_text_field($meta_key_value)
+                        );
+                    }
+                }
+
             }
         }
     };
@@ -154,7 +229,6 @@ function create_custom_post_column_fields($cp_name, $fields) {
     $add_acf_columns = function( $columns ) use ($fields_as_columns) {
         return array_merge ( $columns, $fields_as_columns);
     };
-
     add_filter ( 'manage_'.$cp_name.'_posts_columns', $add_acf_columns );
 
     // B. Then we show the values of the meta fields
@@ -232,6 +306,45 @@ function create_custom_post_info(
     );
     
     return $args;
+}
+
+
+// ==================================================================
+
+function parse_js_condition($metabox_id, $condition_str) {
+    /**
+     * transforme une condition de type "{{my_key}} == 'val1' || {{my_key2}} == 'val2'"
+     * en du code js qui affiche ou non la $metabox_id selon si la condition est vraie ou non
+     * 
+     * Ce code sera intégré dans les templates js dans les balises {{condition_logic}} normalement
+     * 
+     */
+
+    // on cherche les clés à remplacer par des valeurs
+    preg_match_all("/\{\{([^\}]+)\}\}/", $condition_str, $matches);
+
+    if (count($matches) < 2) return $condition_str; 
+    
+    // selector for jQuery .change()
+    $match_unique = array_unique($matches[1]);
+    $html_ids = array_map(function($id) {return $id.'_field';}, $match_unique);
+    $list_selectors = '#'.implode(', #', $html_ids);
+    $array_ids = implode("', '", $html_ids);
+
+    // js condition string
+    $js_condition_str = $condition_str;
+    for ($i = 0; $i < count($match_unique); $i++) {
+        $js_condition_str = str_replace('{{'.$match_unique[$i].'}}', '"${list_values['.$i.']}"', $js_condition_str);
+    }
+
+    return "let custom_logic_fun = function() {
+        let list_values = ['".$array_ids."'].map(id => getVal(id));
+        let condition_str = `".$js_condition_str."`;
+        if (eval(condition_str)) $('#".$metabox_id."').parents('div.meta-box-sortables').show(); /* TODO rendre ça plus fiable, car si wordpress change cette structure, faudra mettre à jour */
+        else $('#".$metabox_id."').parents('div.meta-box-sortables').hide();
+    }
+    custom_logic_fun();
+    $('".$list_selectors."').change(custom_logic_fun);";
 }
 
 ?>

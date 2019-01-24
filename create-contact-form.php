@@ -1,15 +1,35 @@
 <?php
 
+require_once('lib.php'); use \ccn\lib as lib;
 require_once 'create-cp-html-forms.php';
 
 /**
  * Here we define a function that creates a contact form :
- * - a form shortcode to display the HTML form
+ * - a form shortcode to display the HTML form ('ccnlib_{shortcode_name}-show-form')
  * - a backend to get the contact form data and send the email to the proper addresses
  * 
  */
 
 function ccnlib_register_contact_form($options = array()) {
+    /**
+     * @param array $options    Voir la variable $default_options dans le code
+     *  
+     * les ids des champs de ce formulaire sont :
+     * - ccnlib_key_firstname (prénom)
+     * - ccnlib_key_name (nom)
+     * - ccnlib_key_email (email)
+     * - ccnlib_key_message (message)
+     * Le champs 'message_HTML' est automatiquement créé à partir du champs 'ccnlib_key_message' et utilisable dans le template de mail
+     * 
+     * ## SOMMAIRE
+     * 0. Préparation des fonctions et variables nécessaires
+     * 1. On enregistre le shortcode à utiliser pour afficher le formulaire de contact ('ccnlib_{shortcode_name}-show-form')
+     * 2. On enregistre le backend qui recevra la requête POST du formulaire et enverra les emails
+     */
+
+    // ==========================================================
+    // == 0. == On prépare les fonctions et variables nécessaires
+    // ==========================================================
     $prefix = 'ccnlib';
 
     // this function will create automatically an HTML parsed version of the field 'ccnlib_key_message'
@@ -42,7 +62,7 @@ function ccnlib_register_contact_form($options = array()) {
             )
         ),
     );
-    $options = assign_default($default_options, $options);
+    $options = lib\assign_default($default_options, $options);
 
     // pour chaque élément de $options['send_email'], on ajoute la computed_data 'message_HTML' si elle n'existe pas
     foreach ($options['send_email'] as &$element) {
@@ -50,6 +70,7 @@ function ccnlib_register_contact_form($options = array()) {
         if (!isset($element['computed_data']['message_HTML'])) $element['computed_data']['message_HTML'] = $create_HTML_message;
     }
 
+    // Liste des fields potentiels dans le formulaire de contacts
     $all_fields = array(
         'prenom' => array( // Prénom
             'id' => $prefix.'_key_firstname',
@@ -77,15 +98,22 @@ function ccnlib_register_contact_form($options = array()) {
         )
     );
 
+    // on ne garde que les champs nécessaires au formulaire de contact (parmi 'nom', 'prénom', 'email', ...)
     $fields = array();
     foreach ($all_fields as $field_name => $field_options) {
         if (in_array($field_name, $options['fields'])) array_push($fields, $field_options);
     }
 
-    // on enregistre le shortcode
+    // ==========================================================
+    // == 1. == On enregistre le shortcode
+    // ==========================================================
     $action_name = $options['shortcode_name'];
     create_HTML_form_shortcode('', $prefix.'_'.$action_name, $options, $fields);
 
+    // ==========================================================
+    // == 2. == On enregistre le backend 
+    //          qui recevra le POST du formulaire et envoyer un email
+    // ==========================================================
     // on crée le backend pour recevoir le POST du formulaire et envoyer le mail
     $options = array(
         'send_email' => $options['send_email'],

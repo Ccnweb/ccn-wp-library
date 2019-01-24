@@ -46,7 +46,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
         $i=0;
         foreach ($fields as $f) {
             if (isset($_POST[$f['id']])) {
-                $res = $validation->isValidField($_POST[$f['id']], $f['type']);
+                $res = $validation->isValidField($_POST[$f['id']], $f['type']); // TODO ajouter la regex s'il y en a une et la valider
                 if (!$res['valid']) {echo json_encode(array("success" => false, "errno" => $res['reason'], 'descr' => $res['descr'])); die();}
                 $sanitized[$f['id']] = $_POST[$f['id']];
             }
@@ -108,78 +108,6 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
                 $final_response['success'] = $send_result['success'];
                 array_push($final_response['email'], $send_result);
             }
-
-            // == 4. == on envoie un email éventuellement
-            /* foreach ($options['send_email'] as $email_obj) {
-                
-                // à qui on envoie l'email
-                $email_addresses = $email_obj['addresses'];
-                $to = array();
-                for ($i = 0; $i < count($email_addresses); $i++) {
-                    $curr_email = filter_var($email_addresses[$i], FILTER_VALIDATE_EMAIL);
-                    if ($curr_email === false && isset($_POST[$email_addresses[$i]])) { 
-                        $curr_email = filter_var($_POST[$email_addresses[$i]], FILTER_VALIDATE_EMAIL);
-                        if ($curr_email === false) log\warning('INVALID_EMAIL_ADDRESS', $_POST[$email_addresses[$i]]);
-                        else array_push($to, $curr_email );
-                    } else if ($curr_email !== false) {
-                        array_push($to, $curr_email);
-                    } else {
-                        log\warning('INVALID_EMAIL_ADDRESS', 'Invalid email address : '.$email_addresses[$i]);
-                    }
-                }
-                
-                // avec quel sujet
-                $subject = ($email_obj['subject'] != '' && isset($_POST[$email_obj['subject']])) ? $_POST[$email_obj['subject']]  : 'Nouveau message de '.get_site_url() ;
-                // si ce n'est pas un id, c'est un sujet fixe prédéfini avec éventuellement des {{...}} pour des parties dynamiques dans le sujet
-                if ($email_obj['subject'] != '' && !isset($_POST[$email_obj['subject']])) $subject = lib\parseTemplateString($email_obj['subject'], $_POST); 
-                
-                // et quel message
-                $message = 'Lodate Dio !';
-                if ($email_obj['model']) {
-                    // soit c'est un chemin vers le template :
-                    if (file_exists($email_obj['model'])) {
-                        $message = file_get_contents($email_obj['model']);
-                    // soit c'est le nom d'un template existant (comme simple_contact.html)
-                    } else if (file_exists($html_email_models_dir . '/' . $email_obj['model'])) {
-                        $message = file_get_contents($html_email_models_dir . '/' . $email_obj['model']);
-                    // soit c'est lui-même le contenu du message
-                    } else {
-                        $message = $email_obj['model'];
-                    }
-
-                    // on parse le message/modèle au cas où il contient des {{...}}
-                    $model_args = $_POST;
-                    if (isset($email_obj['model_args'])) {
-                        $model_args = lib\array_map_assoc($email_obj['model_args'], function($key, $val) {return lib\parseTemplateString($val, $_POST);});
-                        $model_args = lib\assign_default($model_args, $_POST);
-                    }
-                    $message = lib\parseTemplateString($message, $model_args);
-                }
-
-                // envoi du mail...
-                $sent_successfully = false;
-                if (count($to) > 0) $sent_successfully = wp_mail($to, $subject, $message); // https://developer.wordpress.org/reference/functions/wp_mail/
-
-                // on renvoie soit le succès de l'envoi de mail soit on logge l'erreur
-                if ($sent_successfully) {
-                    if (isset($final_response['success'])) $final_response['email'] = true;
-                    else $final_response = array('success' => true, 'id' => 'unknown', 'create_post' => 'unknown', 'email' => $to);
-                } else {
-                    if (isset($final_response['success'])) {
-                        $final_response['success'] = false;
-                        $final_response['errno'] = 'EMAIL_SEND_FAILED';
-                        if (count($to) < 1) $final_response['errno'] = 'EMAIL_RECIPIENTS_EMPTY_OR_INVALID';
-                        $final_response['descr'] = 'Impossible to send an email to '.json_encode($to);
-                        log\error('in create-cp-rest-backend, sending email', 'Impossible to send an email to '.json_encode($to).' parsed from '.json_encode($email_addresses));
-                        echo json_encode($final_response);
-                    } else {
-                        $error_msg = json_encode(array('success' => false, 'errno' => 'EMAIL_SEND_FAILED', 'descr' => 'Impossible to send an email to '.json_encode($to)));
-                        log\error('in create-cp-rest-backend, send email failed', $error_msg);
-                        echo $error_msg;
-                    }
-                    die();
-                }
-            } */
         }
 
         echo json_encode($final_response);
