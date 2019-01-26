@@ -1,5 +1,6 @@
 <?php
 
+require_once('log.php'); use \ccn\lib\log as log;
 require_once('lib.php'); use \ccn\lib as lib;
 require_once('create-cp-html-fields.php');
 
@@ -9,6 +10,8 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields) {
      * 
      * TODO: argument $cp_id is not used !
      */
+
+    $fields = prepare_fields($fields);
 
     $default_options = array(
         'title' => '',
@@ -33,16 +36,35 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields) {
 
     // pour chaque champs, on crée l'élément HTML correspondant
     foreach($fields as $f) {
-        $label = (array_key_exists('html_label', $f)) ? $f['html_label'] : $f['id']; // le label du champs html
-        $iflabel = (in_array($options['label'], array('label', 'both'))) ? '<label for="'.$f['id'].'_field"></label>' : ''; // élément <label> affiché uniquement si $options['label'] = 'label'
-        $iferror = '<div class="invalid-feedback">Le champs est invalide !</div>';
 
-        $html .= 
-            '<div class="field-container">
-                '.$iflabel.' 
-                '.create_HTML_field($f, array('label' => $options['label'], 'required' => in_array($f['id'], $required_fields))).'
-                '.$iferror.'
-            </div>';
+        // ====================================
+        // Cas des REPEAT-GROUP dynamiques 
+        // (par exemple pour les infos 'enfants' où on peut ajouter un nb variable d'enfants)
+        // ====================================
+        if ($f['type'] == 'REPEAT-GROUP') {
+
+            // TODO
+
+        // ====================================
+        //      CAS DES CHAMPS NORMAUX
+        //  définis dans html_fields/
+        // ====================================
+        } else {
+
+            $label = (array_key_exists('html_label', $f)) ? $f['html_label'] : $f['id']; // le label du champs html
+            $iflabel = (in_array($options['label'], array('label', 'both'))) ? '<label for="'.$f['id'].'_field"></label>' : ''; // élément <label> affiché uniquement si $options['label'] = 'label'
+            $iferror = '<div class="invalid-feedback">Le champs est invalide !</div>';
+
+            $curr_options = array('label' => $options['label'], 'required' => in_array($f['id'], $required_fields));
+
+            $html .= 
+                '<div class="field-container">
+                    '.$iflabel.' 
+                    '.create_HTML_field($f, $curr_options).'
+                    '.$iferror.'
+                </div>';
+
+        }
     }
 
     $html .= '

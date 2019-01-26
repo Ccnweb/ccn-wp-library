@@ -27,10 +27,20 @@ function render_HTML_dropdown($field, $options = array()) {
     $options_default = array(
         'value' => '',
         'label' => 'label', // = 'label', 'placeholder' (mais dans ce cas, placeholder ne fait rien, ça sert juste à ne pas mettre de label)
+        'multiple' => ''
     );
     $options = lib\assign_default($options_default, $options);
 
     // == 2. == Paramètres HTML calculés
+
+    // id HTML
+    $field_id_html = $field['id'].'_field';
+    if ($options['multiple'] != '') $field_id_html .= '_'.$options['multiple'];
+
+    // name HTML
+    $field_name_html = $field['id'].'_field';
+    if ($options['multiple'] != '') $field_name_html .= '[]';
+
     $iflabel = ($options['label'] == 'label') ? '<div class="input-group-prepend">
                     <label class="input-group-text" for="'.$field['id'].'_field">'.$field['html_label'].'</label>
                 </div>' : '';
@@ -40,7 +50,7 @@ function render_HTML_dropdown($field, $options = array()) {
 
     $html = '<div class="input-group">
                 '.$iflabel.'
-                <select class="custom-select" name="'.$field['id'].'_field" id="'.$field['id'].'_field">';
+                <select class="custom-select" name="'.$field_name_html.'" id="'.$field_id_html.'">';
 
     foreach ($field['options'] as $value => $label) {
         $ifselected = ($value == $options['value']) ? 'selected' : '';

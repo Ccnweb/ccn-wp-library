@@ -1,6 +1,7 @@
 <?php
 namespace ccn\lib\html_fields;
 
+require_once(CCN_LIBRARY_PLUGIN_DIR . '/log.php'); use \ccn\lib\log as log;
 require_once(CCN_LIBRARY_PLUGIN_DIR . '/lib.php'); use \ccn\lib as lib;
 
 function render_HTML_radio($field, $options) {
@@ -27,10 +28,23 @@ function render_HTML_radio($field, $options) {
     $field = lib\assign_default($field_default, $field);
 
     $options_default = array(
-        'value' => '',
-        'value_a_preciser' => array('a_preciser_key' => 'a_preciser_value'), // uniquement si le radio button a un ou des champs "à préciser"
+        'value' => array(
+            'option' => '',
+            'a_preciser' => array('a_preciser_key' => 'a_preciser_value'), // uniquement si le radio button a un ou des champs "à préciser"
+        ),
+        'required' => true, // TODO
+        'multiple'  => '', // indice qui indique de la combien-ième instance il s'agit
     );
     $options = lib\assign_default($options_default, $options);
+
+    // on va plus loin pour vérifier que $options['value'] a le bon format
+    if (isset($options['value'])) {
+        $options['value'] = lib\assign_default($options_default['value'], $options['value']);
+        if ($options['value'] === false) {
+            log\error("INVALID_RADIO_OPTION_VALUE", 'in radio.php : $options["value"] is invalid, fallback to default. Details : $options='.json_encode($options));
+            $options['value'] = $options_default['value'];
+        }
+    }
 
 
     // == 2. == PARAMS
@@ -43,17 +57,32 @@ function render_HTML_radio($field, $options) {
 
     $custom_html_version = false; // est-ce que les $field['options'] sont du code HTML ou non
 
+    $field_name_html = $field['id'].'_field';
+    if ($options['multiple'] != '') $field_name_html .= '[]';
+
     foreach ($field['options'] as $value => $label) {
+        // l'id HTML du field
         $curr_id = $field['id'].'_field_'.$value;
-        $ifchecked = ($value == $options['value']) ? 'checked': '';
+        if ($options['multiple'] != '') $curr_id .= '_'.$options['multiple'];
+
+        $ifchecked = ($value == $options['value']['option']) ? 'checked': '';
 
         // options_preciser permet d'ajouter un champs texte pour préciser une option du radio button
         // l'id du champs à préciser est construit de la manière suivante : {$field['id']}_field_{$value}_preciser
         // TODO appeler plutôt une fonction create_HTML_input, ce sera plus propre que mettre en dur "<input ..."
-        $ifvalue_a_preciser = (isset($options['value_a_preciser'][$curr_id.'_preciser'])) ? $options['value_a_preciser'][$curr_id.'_preciser'] : '' ;
-        $if_a_preciser = (in_array($value, $field['options_preciser'])) ? '<input type="text" class="form-control" name="'.$curr_id.'_preciser" id="'.$curr_id.'_preciser" value="'.$ifvalue_a_preciser.'">' : '';
+        $ifvalue_a_preciser = (isset($options['value']['a_preciser'][$curr_id.'_preciser'])) ? $options['value']['a_preciser'][$curr_id.'_preciser'] : '' ;
+        if ($ifvalue_a_preciser != '' && $options['multiple'] != '') $ifvalue_a_preciser .=  '_'.$options['multiple'];
+        
+        // id html preciser
+        $field_id_preciser = $curr_id.'_preciser';
+        if ($options['multiple'] != '') $field_id_preciser .= '_'.$options['multiple'];
+        // name html preciser
+        $field_name_preciser = $curr_id.'_preciser';
+        if ($options['multiple'] != '') $field_name_preciser .= '[]';
 
-        $radio_option = '<input class="form-check-input" type="radio" name="'.$field['id'].'_field" id="'.$curr_id.'" value="'.$value.'" '.$ifchecked.'>
+        $if_a_preciser = (in_array($value, $field['options_preciser'])) ? '<input type="text" class="form-control" name="'.$field_name_preciser.'" id="'.$field_id_preciser.'" value="'.$ifvalue_a_preciser.'">' : '';
+
+        $radio_option = '<input class="form-check-input" type="radio" name="'.$field_name_html.'" id="'.$curr_id.'" value="'.$value.'" '.$ifchecked.'>
                         <label class="form-check-label" for="'.$curr_id.'">'.$label.'</label>';
 
         // si la radio option commence par '<', c'est du code HTML, on utilise le code HTML au lieu d'un label
@@ -80,21 +109,54 @@ function render_HTML_radio($field, $options) {
 
 }
 
-function get_value_from_db_radio($post, $field) {
+
+
+
+
+
+
+function get_field_ids_radio($field, $html = false) {
+    /**
+     * Fonction qui renvoie les ids des meta_key de ce field ou des ids des field HTML
+     */
+
+    $ids = [$field['id']];
+    if ($html) $ids = [$field['id'].'_field'];
+    if (!isset($field['options_preciser'])) return $ids;
+
+    foreach ($field['options_preciser'] as $id_preciser) {
+        $curr_id = $field['id'].'_field_'.$id_preciser.'_preciser';
+        array_push($ids, $curr_id);
+    }
+
+    return $ids;
+}
+
+function get_field_names_radio($field) {
+    /**
+     * Fonction qui renvoie les ids des meta_key de ce field ou des ids des field HTML
+     */
+
+    return ['option', 'a_preciser'];
+}
+
+
+function get_value_from_db_radio($post, $field, $single = true) {
     /**
      * 
      */
 
-    $curr_options = array();
-
-    $value = get_post_meta($post->ID, $field["id"], true);
+    $value = get_post_meta($post->ID, $field["id"], $single);
+    $curr_options = array('value' => 
+        array('option' => $value)
+    );
 
     $field_id_preciser = $field['id'].'_field_'.$value.'_preciser';
     if (metadata_exists('post', $post->ID, $field_id_preciser)) { // si mon post a bien un champs meta qui s'appelle $field_id_preciser
-        $value_a_preciser = get_post_meta($post->ID, $field_id_preciser, true);
+        $value_a_preciser = get_post_meta($post->ID, $field_id_preciser, $single);
         if ($value_a_preciser) {
-            $curr_options['value_a_preciser'] = array();
-            $curr_options['value_a_preciser'][$field_id_preciser] = $value_a_preciser;
+            $curr_options['value']['a_preciser'] = array();
+            $curr_options['value']['a_preciser'][$field_id_preciser] = $value_a_preciser;
         }
     }
 
@@ -121,7 +183,7 @@ function save_field_to_db_radio($field, $post_values) {
     $field_a_preciser = $field_id.'_'.$post_values[$field_id].'_preciser';
     if (array_key_exists($field_a_preciser, $post_values)) {
 
-        $key = $f['id'].'_field_'.$post_values[$field_id].'_preciser';
+        $key = $field['id'].'_field_'.$post_values[$field_id].'_preciser';
         $val = $post_values[$field_a_preciser];
 
         $res[$key] = $val;

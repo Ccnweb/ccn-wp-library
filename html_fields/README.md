@@ -18,3 +18,11 @@
 * on peut ajouter une fonction `get_value_from_db_{nom_du_field}` pour récupérer les valeurs de champs complexes depuis la DB
 * on peut ajouter une fonction `save_field_to_db_{nom_du_field}` pour sauver les valeurs de champs complexes dans la DB
 
+# Architecture
+
+* le fichier create-cp-html-fields.php est celui qui contrôle tous les fields définis dans html_fields/ et propose des fonctions utiles pour accéder aux différentes fonctionnalités des fields
+
+# TODO
+
+* rendre tous les fields 'multiple' compatibles et 'group-repeat' compatibles (s'inspirer de ce qui a été fait pour input.php)
+* ajouter la fonction get_field_ids_nom_prenom pour les fields complexes qui en ont besoin

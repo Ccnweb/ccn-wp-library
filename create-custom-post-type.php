@@ -50,7 +50,11 @@ function create_custom_post_fields($cp_name, $cp_slug, $metabox_opt, $prefix, $f
             'fields' => 'ALL', // 'ALL' ou array des champs id à mettre dans la metabox
         ),
     );
-    $metabox_opt = lib\assign_default($default_metabox_opt, $metabox_opt);
+    //$metabox_opt = lib\assign_default($default_metabox_opt, $metabox_opt);
+
+    // 0. on préprocesse les fields pour notamment gérer les champs 'copy'
+    $fields = prepare_fields($fields);
+
 
     // 1. on crée les metakeys
     foreach ($fields as $f) {
@@ -58,14 +62,11 @@ function create_custom_post_fields($cp_name, $cp_slug, $metabox_opt, $prefix, $f
     }
 
     // 2. on crée les metaboxes avec tous les fields
+    $metabox_opt = lib\fix_if_wrong($metabox_opt, array(), 'is_array', 'in create-custom-post-type > $metabox_opt is not an array');
+
     foreach ($metabox_opt as $curr_metabox) {
-        $curr_fields = $fields;
-        if ($curr_metabox['fields'] !== 'ALL') {
-            $curr_fields = array_filter($fields, function($el) use ($curr_metabox) {
-                return in_array($el['id'], $curr_metabox['fields']);
-            });
-        }
-        create_custom_post_metabox($cp_name, $curr_metabox, $prefix, $curr_fields);
+        
+        create_custom_post_metabox($cp_name, $curr_metabox, $prefix, $fields);
     }
 
     // 3. on crée la callback de sauvegarde des données de la metabox
@@ -76,7 +77,7 @@ function create_custom_post_fields($cp_name, $cp_slug, $metabox_opt, $prefix, $f
 }
 
 
-// 1. Creates a custom post meta key
+// 1. Creates a custom post meta key (ça n'a pas l'air nécessaire ?!)
 function create_custom_post_key($cp_name, $f) {
     // we deal with default values that may have been omitted
     $default_f = array(
@@ -86,6 +87,9 @@ function create_custom_post_key($cp_name, $f) {
         'show_in_rest' => true,
     );
     $attributes = lib\assign_default($default_f, $f);
+
+    // cas des REPEAT-GROUP TODO?
+    if (isset($f['type']) && $f['type'] == 'REPEAT-GROUP') return;
     
     // we register the meta field
     $post_meta_args = array("type", "description", "single", "show_in_rest");
@@ -103,55 +107,105 @@ function create_custom_post_key($cp_name, $f) {
 
 
 // 2. Creates a meta box for a custom post
-function create_custom_post_metabox($cp_name, $metabox, $prefix, $fields) {
-    $metabox_fun = function() use ($cp_name, $prefix, $fields, $metabox) {
+function create_custom_post_metabox($cp_name, $metabox, $prefix, $all_fields) {
+
+    $metabox_fun = function() use ($cp_name, $prefix, $all_fields, $metabox) {
 
         $metabox_id = $cp_name.'_custom_metabox_'.sanitize_title($metabox['title'], str_replace(' ', '-', $metabox['title']));
         
         // make sure the form request comes from WordPress
 	    //wp_nonce_field( basename( __FILE__ ), $metabox['title'] );
 
-        $metabox_html = function($post) use ($prefix, $fields, $metabox, $metabox_id) {
+        $metabox_html = function($post) use ($prefix, $all_fields, $metabox, $metabox_id) {
             ?>
             <div class="<?php echo $prefix; ?>_custom_metabox" style="display:flex;flex-direction:column">
 
                 <?php /* on insère chaque field */
+
+                // on filtre uniquement les fields de cette metabox
+                $fields = $all_fields;
+                if ($metabox['fields'] !== 'ALL') {
+                    $fields = array_filter($all_fields, function($el) use ($metabox) {
+                        return in_array($el['id'], $metabox['fields']);
+                    });
+                }
+
                 foreach ($fields as $field):
 
-                    $value = get_post_meta($post->ID, $field["id"], true); // le nom de la metakey
-                    $label = (array_key_exists('html_label', $field)) ? $field['html_label'] : $field['id']; // le label du champs html
-                    $curr_options = array('value' => $value);
-                    // si on est dans le cas d'un field complexe, on ajoute/modifie $value pour que le champs ait les bonnes valeurs
-                    if (function_exists('\ccn\lib\html_fields\get_value_from_db_'.$field['type'])) {
-                        $res = call_user_func('\ccn\lib\html_fields\get_value_from_db_'.$field['type'], $post, $field);
-                        if ($res === false) log\error('HTML_FIELD_RETRIEVE_DATA_FAILED', 'Failed to retrieve post data for field with id='.$field['id'].' of type '.$field['type'].' in post with id='.$post->ID);
-                        else $curr_options = lib\assign_default($curr_options, $res);
-                    }
-                    ?>
+                    // cas d'une copie d'un autre champs (TOBEDEL car c'est traité en amont normalement)
+                    /* if (isset($field['copy'])) {
+                        $el_to_copy_from = array_filter($fields, function($el) use ($field) {return $el['id'] == $field['copy'];});
+                        if (empty($el_to_copy_from)) {
+                            log\error('INVALID_COPY_FIELD', 'in create_custom_post_metabox > fun $metabox_html : Invalid id specified in copy key, no matching field found. Details : copy_id = '.$f['copy']);
+                            continue; // saute cet élément de la boucle courante
+                        }
+                        $new_id = $field['id'];
+                        $field = $el_to_copy_from[0];
+                        $field['id'] = $new_id;
+                    } */
 
-                    <div class="metabox_field_container">
-                        <!-- <label for="<?php echo $field['id']; ?>_field"><?php echo $label; ?></label> -->
-                        <?php echo create_HTML_field($field, $curr_options); ?>
-                    </div>
+                    // ====================================
+                    // Cas des REPEAT-GROUP dynamiques 
+                    // (par exemple pour les infos 'enfants' où on peut ajouter un nb variable d'enfants)
+                    // ====================================
+                    if ($field['type'] == 'REPEAT-GROUP') {
 
-                <?php endforeach; ?>
+                        ?>
+                        <div class="metabox_field_container">
+                            <?php echo create_HTML_repeat_group($field, $post); ?>
+                        </div>
+                        <?php
+
+                    // ====================================
+                    //      CAS DES CHAMPS NORMAUX
+                    //  définis dans html_fields/
+                    // ====================================
+                    } else {
+
+                        // on récupère la valeur du field depuis la base de données si ça existe
+                        $curr_options = get_value_from_db($post, $field);
+
+                        $label = (array_key_exists('html_label', $field)) ? $field['html_label'] : $field['id']; // le label du champs html
+                        ?>
+
+                        <div class="metabox_field_container">
+                            <!-- <label for="<?php echo $field['id']; ?>_field"><?php echo $label; ?></label> -->
+                            <?php echo create_HTML_field($field, $curr_options); ?>
+                        </div>
+
+                <?php } endforeach; ?>
 
             </div>
             <?php
 
-            // on injecte le javascript qu'il faut
+            // on injecte le javascript qu'il faut - TODO mettre le javascript direct ici et importer les fonctions avec enqueue_script_admin
             if (isset($metabox['condition'])) {
-                $js_data = array(
-                    'condition_logic' => parse_js_condition($metabox_id, $metabox['condition']),
+
+                $rules = parse_js_condition($metabox_id, $metabox, $all_fields);
+
+                ?>
+                <script type="text/javascript">
+                    jQuery(document).ready(function($) {
+
+                        let rules = <?php echo json_encode($rules); ?>;
+                        console.log('RULES', rules);
+                        //load_custom_logic(rules);
+
+                    });
+                </script>
+                <?php
+
+                /* $js_data = array(
+                    'rules' => parse_js_condition_old($metabox_id, $metabox, $fields),
                 );
-                echo lib\get_js_script(CCN_LIBRARY_PLUGIN_DIR . 'js/metabox_template.js.tpl', $js_data);
+                echo lib\get_js_script(CCN_LIBRARY_PLUGIN_DIR . 'js/metabox_template.js.tpl', $js_data); */
             }
             
         };
 
         add_meta_box(
-            $metabox_id, // Unique ID
-            $metabox['title'],             // Box title
+            $metabox_id,                // Unique ID
+            $metabox['title'],          // Box title
             $metabox_html,              // Content callback, must be of type callable
             $cp_name,                   // Post type
             'advanced',                 // $context (default = 'advanced')
@@ -169,47 +223,82 @@ function create_custom_post_savecbk($cp_name, $fields) {
         // Check the user's permissions.
         if ( !current_user_can('edit_post', $post_id) ) return;
 
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+
         foreach ($fields as $f) {
-            $field_id = $f['id'].'_field';
 
-            if (array_key_exists($field_id, $_POST)) {
-                update_post_meta(
-                    $post_id,
-                    $f['id'],
-                    sanitize_text_field($_POST[$field_id])
-                );
+            // cas d'une copie d'un autre champs
+            if (isset($f['copy'])) {
+                $el_to_copy_from = array_filter($fields, function($el) use ($f) {return $el['id'] == $f['copy'];});
+                if (empty($el_to_copy_from)) {
+                    log\error('INVALID_COPY_FIELD', 'Invalid id specified in copy key, no matching field found. Details : copy_id = '.$f['copy']);
+                    continue; // saute cet élément de la boucle courante
+                }
+                $f = $el_to_copy_from[0];
+            } 
 
-                // si c'est un champs complexe, on save aussi ce champs
-                // par exemple un radio button avec un champs à préciser 
-                // son id est construit comme suit : {$field['id']}_field_{$value}_preciser)
-                /* $field_a_preciser = $field_id.'_'.$_POST[$field_id].'_preciser';
-                if ($f['type'] == 'radio' && array_key_exists($field_a_preciser, $_POST)) {
+            // ==========================================
+            // Cas des REPEAT-GROUP / fields dynamiques
+            // ==========================================
+            if ($f['type'] == 'REPEAT-GROUP') {
+
+                $group_id = $f['id'];
+                $new = array();
+                $field_ids_html = lib\array_flatten(array_map(function($el_field) {return get_field_ids($el_field, true);}, $f['fields']));
+
+                $group_post_values = lib\extract_fields($_POST, $field_ids_html);
+                $new = lib\array_swap_chaussette($group_post_values);
+
+                // on enlève les éléments de $new qui ont un champs requis qui est vide
+                $mandatory_fields = get_required_fields($f);
+                $new = array_filter($new, function($el) use ($mandatory_fields) {
+                    $el_required = lib\extract_fields($el, $mandatory_fields);
+                    return count(array_filter($el_required, function($v) {return $v == '';})) == 0;
+                });
+
+                // l'ancienne valeur du post
+                $old = get_post_meta($post_id, $group_id, true);
+
+                // on update le post ou on le delete s'il n'y a aucun valeur à ajouter
+                if (!empty($new)) update_post_meta( $post_id, $group_id, $new );
+                else delete_post_meta( $post_id, $group_id, $old );
+
+
+            // ==========================================
+            // Cas des fields normaux/statiques
+            // ==========================================
+            } else {
+
+                $field_id = $f['id'].'_field';
+
+                if (array_key_exists($field_id, $_POST)) {
                     update_post_meta(
                         $post_id,
-                        $f['id'].'_field_'.$_POST[$field_id].'_preciser',
-                        sanitize_text_field($_POST[$field_a_preciser])
+                        $f['id'],
+                        sanitize_text_field($_POST[$field_id])
                     );
-                } */
-            }
-
-            // cas des champs complexes qui ont une fonction de sauvegarde particulière (cf nom_prenom.php ou radio.php par exemple)
-            if (function_exists('\ccn\lib\html_fields\save_field_to_db_'.$f['type'])) {
-                $res = call_user_func('\ccn\lib\html_fields\save_field_to_db_'.$f['type'], $f, $_POST);
-                if ($res === false) return log\error('HTML_FIELD_SAVE_DATA_FAILED', 'Failed to save post data for field with id='.$f['id'].' of type '.$f['type'].' in post with id='.$post_id);
-                if (gettype($res) !== 'array') return log\error('HTML_FIELD_SAVE_DATA_INVALID', 'Invalid post data to be saved, returned by the custom save function for field with id='.$f['id'].' of type '.$f['type'].' in post with id='.$post_id);
-                
-                // si tout s'est bien passé, on sauve ce qu'il faut
-                foreach ($res as $meta_key_id => $meta_key_value) {
-                    if (gettype($meta_key_id) !== 'string') log\error('HTML_FIELD_SAVE_DATA_INVALID_KEY', 'Invalid post data key to be saved (key is not a string but a '.gettype($meta_key_id).'), returned by the custom save function for field with id='.$f['id'].' of type '.$f['type'].' in post with id='.$post_id);
-                    else {
-                        update_post_meta(
-                            $post_id,
-                            $meta_key_id,
-                            sanitize_text_field($meta_key_value)
-                        );
-                    }
                 }
 
+                // cas des champs complexes qui ont une fonction de sauvegarde particulière (cf nom_prenom.php ou radio.php par exemple)
+                // TODO au lieu de faire tout ce bazar avec function_exists, passer par une fonction unique définie dans create-cp-html-fields.php
+                if (function_exists('\ccn\lib\html_fields\save_field_to_db_'.$f['type'])) {
+                    $res = call_user_func('\ccn\lib\html_fields\save_field_to_db_'.$f['type'], $f, $_POST);
+                    if ($res === false) return log\error('HTML_FIELD_SAVE_DATA_FAILED', 'Failed to save post data for field with id='.$f['id'].' of type '.$f['type'].' in post with id='.$post_id);
+                    if (gettype($res) !== 'array') return log\error('HTML_FIELD_SAVE_DATA_INVALID', 'Invalid post data to be saved, returned by the custom save function for field with id='.$f['id'].' of type '.$f['type'].' in post with id='.$post_id);
+                    
+                    // si tout s'est bien passé, on sauve ce qu'il faut
+                    foreach ($res as $meta_key_id => $meta_key_value) {
+                        if (gettype($meta_key_id) !== 'string') log\error('HTML_FIELD_SAVE_DATA_INVALID_KEY', 'Invalid post data key to be saved (key is not a string but a '.gettype($meta_key_id).'), returned by the custom save function for field with id='.$f['id'].' of type '.$f['type'].' in post with id='.$post_id);
+                        else {
+                            update_post_meta(
+                                $post_id,
+                                $meta_key_id,
+                                sanitize_text_field($meta_key_value)
+                            );
+                        }
+                    }
+
+                }
             }
         }
     };
@@ -309,42 +398,6 @@ function create_custom_post_info(
 }
 
 
-// ==================================================================
 
-function parse_js_condition($metabox_id, $condition_str) {
-    /**
-     * transforme une condition de type "{{my_key}} == 'val1' || {{my_key2}} == 'val2'"
-     * en du code js qui affiche ou non la $metabox_id selon si la condition est vraie ou non
-     * 
-     * Ce code sera intégré dans les templates js dans les balises {{condition_logic}} normalement
-     * 
-     */
-
-    // on cherche les clés à remplacer par des valeurs
-    preg_match_all("/\{\{([^\}]+)\}\}/", $condition_str, $matches);
-
-    if (count($matches) < 2) return $condition_str; 
-    
-    // selector for jQuery .change()
-    $match_unique = array_unique($matches[1]);
-    $html_ids = array_map(function($id) {return $id.'_field';}, $match_unique);
-    $list_selectors = '#'.implode(', #', $html_ids);
-    $array_ids = implode("', '", $html_ids);
-
-    // js condition string
-    $js_condition_str = $condition_str;
-    for ($i = 0; $i < count($match_unique); $i++) {
-        $js_condition_str = str_replace('{{'.$match_unique[$i].'}}', '"${list_values['.$i.']}"', $js_condition_str);
-    }
-
-    return "let custom_logic_fun = function() {
-        let list_values = ['".$array_ids."'].map(id => getVal(id));
-        let condition_str = `".$js_condition_str."`;
-        if (eval(condition_str)) $('#".$metabox_id."').parents('div.meta-box-sortables').show(); /* TODO rendre ça plus fiable, car si wordpress change cette structure, faudra mettre à jour */
-        else $('#".$metabox_id."').parents('div.meta-box-sortables').hide();
-    }
-    custom_logic_fun();
-    $('".$list_selectors."').change(custom_logic_fun);";
-}
 
 ?>

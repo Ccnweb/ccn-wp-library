@@ -17,6 +17,7 @@ function render_HTML_input($field, $options = array()) {
     $field_default = array(
         'id'                => 'dummy_id',     // l'id du custom meta field correspondant (ou post_title etc...)
         'type'              => 'text', // 'text', 'date', 'tel', 'postal_code' ou tout attribut accepté par <input type="...">
+        'required'          => true,
         'regex_pattern'     => '', // le pattern regex à ajouter éventuellement
         'html_label'        => 'text input',
         'html_attributes'   => array(), // ajout d'attributs html supplémentaires sous forme de $key => $value
@@ -30,7 +31,7 @@ function render_HTML_input($field, $options = array()) {
         'label'     => 'label', // = 'label', 'placeholder', 'both' (utile uniquement si style != 'simple')
         //'label_position' => 'top', // 'top' ou 'left' pour dire où se situe le label par rapport au champs
         'value'     => '',
-        'required'  => true,
+        'multiple'  => '', // indice qui indique de la combien-ième instance il s'agit
     );
     $options = lib\assign_default($options_default, $options);
 
@@ -42,17 +43,28 @@ function render_HTML_input($field, $options = array()) {
 
     // l'id du field HTML
     $field_id_html = $field['id']."_field";
+    if ($options['multiple'] != '') $field_id_html .= '_'.$options['multiple'];
+
+    // le name du field HTML
+    $field_name_html =  $field['id']."_field";
+    if ($options['multiple'] != '') $field_name_html .= '[]';
+    
     // regex
     $regex_pattern = (isset($field['regex_pattern'])) ? $field['regex_pattern'] : get_mytype_HTML_pattern($field['type']);
     $ifregex = ($regex_pattern != '') ? ' pattern="'.$regex_pattern.'" ' : '';
+    
     // specific html attributes
     $html_attributes = (count($field['html_attributes']) > 0) ? implode(' ', lib\array_map_assoc($field['html_attributes'], function($k, $v) {return $k.'="'.str_replace('"','\"', $v).'"';})) : '';
+    
     // champs requis ou non
-    $ifrequired = ($options['required']) ? ' required ' : '' ;
+    $ifrequired = ($field['required']) ? ' required ' : '' ;
+    
     // ajouter un label ou non avant le <input>
     $iflabel = (in_array($options['label'], array('label', 'both'))) ? '<label for="'.$field_id_html.'">'.$field['html_label'].'</label>' : '';
+    
     // ajouter un placeholder
     $ifplaceholder = (in_array($options['label'], array('placeholder', 'both'))) ? ' placeholder="'.$field['html_label'].'" ' : "";
+    
     // ajouter un élément d'information pour remplir le champs
     $ifdescription = ($field['msg_info']) ? 'aria-describedby="'.$field['id'].'_description"': '';
     $if_msg_info = ($field['msg_info']) ? '<small id="'.$field['id'].'_description" class="form-text text-muted ccnlib_field_info">'.$field['msg_info'].'</small>': '';
@@ -65,7 +77,7 @@ function render_HTML_input($field, $options = array()) {
     $input = '<input    type="'.get_HTML_field_input_type($field['type']).'" 
                         class="form-control postbox'.$ifdateclass.'" 
                         id="'.$field_id_html.'" 
-                        name="'.$field_id_html.'" 
+                        name="'.$field_name_html.'" 
                         '.$html_attributes.'
                         '.$ifdate.'
                         '.$ifregex.'
