@@ -308,6 +308,14 @@ function field_structure_is_valid($field) {
 // ==================================================================
 
 function parse_js_condition($metabox_id, $metabox, $fields) {
+    /**
+     * transforme une condition de type "{{my_key}} == 'val1' || {{my_key2}} == 'val2'"
+     * en du code js qui affiche ou non la $metabox_id selon si la condition est vraie ou non
+     * 
+     * Ce code sera intégré dans les templates js dans les balises {{condition_logic}} normalement
+     * 
+     */
+
     $rules = array();
 
     // =====================================================
@@ -323,12 +331,10 @@ function parse_js_condition($metabox_id, $metabox, $fields) {
     // on parse les conditions relatives aux fields si besoin
     // =====================================================
     if (isset($metabox['field_conditions'])) {
-        
         foreach ($metabox['field_conditions'] as $field_id => $condition) {
-
+            
             $new_rule = build_js_rule($field_id, $condition, $fields);
-            if (empty($new_rule['source_ids'])) $new_rule['source_selector'] = '#'.$metabox_id.' [name]'; // by default it's any element in the metabox that has a "name" attribute
-            array_push($rules, $new_rule);
+            if (!empty($new_rule)) array_push($rules, $new_rule);
 
         }
 
@@ -348,21 +354,24 @@ function build_js_rule($target_id, $condition, $fields) {
         'condition' => $condition,
     );
 
+    // on prépare : ================================
+    // créer le mapper 'meta_key' => 'html_id'
+    // =============================================
+    $all_field_ids = array_map(function($f) {
+        return array(
+            'meta_id' => get_field_ids($f, false), // ids des meta keys
+            'html_id' => get_field_ids($f, true), // ids HTML
+        );
+    }, $fields);
+    $id_mapper = lib\array_transform_mapper($all_field_ids, 'meta_id', 'html_id');
+
+    // on remplace éventuellement le target id
+    if (array_key_exists($target_id, $id_mapper)) $new_rule['target_selector'] = '#'.$id_mapper[$target_id];
+
     // on cherche les clés à remplacer par des valeurs
     preg_match_all("/\{\{([^\}]+)\}\}/", $condition, $matches);
 
     if (count($matches) > 1) {
-
-        // on prépare : ================================
-        // créer le mapper 'meta_key' => 'html_id'
-        // =============================================
-        $all_field_ids = array_map(function($f) {
-            return array(
-                'meta_id' => get_field_ids($my_field, false), // ids des meta keys
-                'html_id' => get_field_ids($my_field, true), // ids HTML
-            );
-        }, $fields);
-        $id_mapper = lib\array_transform_mapper($all_field_ids, 'meta_id', 'html_id');
 
         // we detect the source_ids
         $match_unique = array_unique($matches[1]);
@@ -374,54 +383,14 @@ function build_js_rule($target_id, $condition, $fields) {
         unset($new_rule['source_selector']); // on supprime le source_selector par défaut, pour ne pas qu'il écrase le comportement de 'source_ids'
 
         // in the condition string, we replace the meta key ids by the html ids
-        $mapping_meta_html = array_map(function($el) { 
-            $res = lib\array_swap_chaussette($el);
-            return array_map(function ($el2) {
-                array($el2['meta_id'] => '{{'.$el2['html_id'].'}}');
-            }, $res);
-        }, $source_ids); // TODO
-        $mapping_meta_html = lib\array_flatten($mapping_meta_html);
+        $mapping_meta_html = array_map(function($val) {
+            return '{{'.$val.'}}';
+        }, $id_mapper);
         $new_rule['condition'] = lib\parseTemplateString($condition, $mapping_meta_html);
 
     }
 
     return $new_rule;
-}
-
-function parse_js_condition_old($metabox_id, $condition_str) {
-    /**
-     * transforme une condition de type "{{my_key}} == 'val1' || {{my_key2}} == 'val2'"
-     * en du code js qui affiche ou non la $metabox_id selon si la condition est vraie ou non
-     * 
-     * Ce code sera intégré dans les templates js dans les balises {{condition_logic}} normalement
-     * 
-     */
-
-    // on cherche les clés à remplacer par des valeurs
-    preg_match_all("/\{\{([^\}]+)\}\}/", $condition_str, $matches);
-
-    if (count($matches) < 2) return $condition_str; 
-    
-    // selector for jQuery .change()
-    $match_unique = array_unique($matches[1]);
-    $html_ids = array_map(function($id) {return $id.'_field';}, $match_unique);
-    $list_selectors = '#'.implode(', #', $html_ids);
-    $array_ids = implode("', '", $html_ids);
-
-    // js condition string
-    $js_condition_str = $condition_str;
-    for ($i = 0; $i < count($match_unique); $i++) {
-        $js_condition_str = str_replace('{{'.$match_unique[$i].'}}', '"${list_values['.$i.']}"', $js_condition_str);
-    }
-
-    return "let custom_logic_fun = function() {
-        let list_values = ['".$array_ids."'].map(id => getVal(id));
-        let condition_str = `".$js_condition_str."`;
-        if (eval(condition_str)) $('#".$metabox_id."').show();
-        else $('#".$metabox_id."').hide();
-    }
-    custom_logic_fun();
-    $('".$list_selectors."').change(custom_logic_fun);";
 }
 
 ?>

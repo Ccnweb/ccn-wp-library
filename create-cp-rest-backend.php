@@ -18,7 +18,9 @@ require_once(CCN_LIBRARY_PLUGIN_DIR . '/email/send_email.php'); use \ccn\lib\ema
 
 function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users = 'all', $fields, $options = array()) {
     /**
-     * @param string $cp_id
+     * Creates a backend to receive POST requests from a form
+	 * 
+	 * @param string $cp_id
      * @param string $prefix            Prefix of the custom post type that will be used as prefix for the action_name
      * @param string $soft_action_name  A name that will be part of the final action_name. The POST body should contain an attribute 'action'=$action_name
      * @param string $accepted_users    Can be 'all' or 'loggedin' to know who can POST on this interface
@@ -33,12 +35,14 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
         'send_email' => array(), // (no email sent by default) array of arrays with elements like array('addresses' => array('coco@example.com'), 'subject' => 'id_of_subject_field', 'model' => 'path_to_html_email_model', 'model_args' => array('title' => 'Merci de nous contacter'))
         'send_to_user' => '', // if the email should be sent to the email address of the user, write here the id of the user email field
         'create_post' => true, // créer ou non un nouveau post de type $cp_id (normalement c'est oui, sauf pour les formulaire de contact par ex)
+		'on_before_save_post' => '', // fonction custom, exécutée juste avant de sauver le post
+		'on_finish' => '', // fonction custom, exécutée juste avant de renvoyer la réponse du serveur
     );
     $options = lib\assign_default($default_options, $options);
     
 
     $backend_callback = function() use ($cp_id, $fields, $validation, $html_email_models_dir, $options) {
-        $final_response = ''; // le json final qui sera renvoyé
+        $final_response = array('success' => true); // le json final qui sera renvoyé
 
         // == 1. == sanitize the inputs
         $sanitized = array();
@@ -73,6 +77,19 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
 
             // == 3. == on crée un post
             if (options['create_post']) {
+				
+				// on exécute éventuellement une custom fonction on_before_save_post
+				if (function_exists($options['on_before_save_post'])){
+					$res = $options["on_before_save_post"]($sanitized);
+					echo "####".json_encode(isset($res))."####";
+					$final_response['on_before_save_post'] = $res;
+					if (!isset($res) || !isset($res['success']) || $res['success'] !== true) {
+						$final_response['success'] = false;
+						echo json_encode($final_response);
+						die();
+					}
+				}
+				
                 $args = array(
                     'post_type' => $cp_id,
                     'meta_input' => $sanitized
@@ -82,10 +99,14 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
                 $res = wp_insert_post($args);
 
                 if ($res == 0) {
-                    echo json_encode(array('success' => false, 'errno' => 'POST_CREATION_FAILED', 'descr' => 'Impossible de créer un post de type '.$cp_id.' avec les paramètres fournis :('));
+                    echo json_encode(
+						$final_response = array_merge($final_reponse,
+							array('success' => false, 'errno' => 'POST_CREATION_FAILED', 'descr' => 'Impossible de créer un post de type '.$cp_id.' avec les paramètres fournis :(')
+						)
+					);
                     die();
                 } else {
-                    $final_response = array('success' => true, 'id' => $res, 'create_post' => true, 'email' => false);
+                    $final_response = array_merge($final_reponse, array('success' => true, 'id' => $res, 'create_post' => true, 'email' => false));
                 }
             }
         }
@@ -93,8 +114,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
         if (count($options['send_email'] > 0)) {
 
             // == 4. == on envoie un email
-            if (!$final_response) $final_response = array('success' => true, 'email' => array());
-            else $final_response['email'] = array();
+            $final_response['email'] = array();
 
             foreach ($options['send_email'] as $email_obj) {
                 $send_result = email\send( 
@@ -109,6 +129,17 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
                 array_push($final_response['email'], $send_result);
             }
         }
+		
+		// == 5. == we execute a custom function if defined in options
+		if (function_exists($options["on_finish"])) {
+			$res = $options["on_finish"]($sanitized);
+			$final_response['on_finish'] = $res;
+			if (!isset($res) || !isset($res['success']) || $res['success'] !== true) {
+				$final_response['success'] = false;
+				echo json_encode($final_response);
+				die();
+			}
+		}
 
         echo json_encode($final_response);
         die();

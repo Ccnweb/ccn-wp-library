@@ -21,7 +21,7 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields) {
         'computed_fields' => array(), // ici on définit les champs calculé, par ex 'post_title' => "() => getVal('wpsubs_key_name')"
         'custom_logic_path' => '', // chemin ABSOLU vers un fichier .js qui contient la liste des règles JS spécifiques pour les formulaires complexes
     );
-    $options = assign_default($default_options, $options);
+    $options = lib\assign_default($default_options, $options);
 
     // on ajoute le shortcode avec l'HTML du formulaire
 

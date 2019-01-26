@@ -124,25 +124,13 @@ function create_custom_post_metabox($cp_name, $metabox, $prefix, $all_fields) {
 
                 // on filtre uniquement les fields de cette metabox
                 $fields = $all_fields;
-                if ($metabox['fields'] !== 'ALL') {
+                if (isset($metabox['fields']) && $metabox['fields'] !== 'ALL') {
                     $fields = array_filter($all_fields, function($el) use ($metabox) {
                         return in_array($el['id'], $metabox['fields']);
                     });
                 }
 
                 foreach ($fields as $field):
-
-                    // cas d'une copie d'un autre champs (TOBEDEL car c'est traité en amont normalement)
-                    /* if (isset($field['copy'])) {
-                        $el_to_copy_from = array_filter($fields, function($el) use ($field) {return $el['id'] == $field['copy'];});
-                        if (empty($el_to_copy_from)) {
-                            log\error('INVALID_COPY_FIELD', 'in create_custom_post_metabox > fun $metabox_html : Invalid id specified in copy key, no matching field found. Details : copy_id = '.$f['copy']);
-                            continue; // saute cet élément de la boucle courante
-                        }
-                        $new_id = $field['id'];
-                        $field = $el_to_copy_from[0];
-                        $field['id'] = $new_id;
-                    } */
 
                     // ====================================
                     // Cas des REPEAT-GROUP dynamiques 
@@ -179,7 +167,7 @@ function create_custom_post_metabox($cp_name, $metabox, $prefix, $all_fields) {
             <?php
 
             // on injecte le javascript qu'il faut - TODO mettre le javascript direct ici et importer les fonctions avec enqueue_script_admin
-            if (isset($metabox['condition'])) {
+            if (isset($metabox['condition']) || isset($metabox['field_conditions'])) {
 
                 $rules = parse_js_condition($metabox_id, $metabox, $all_fields);
 
@@ -187,9 +175,9 @@ function create_custom_post_metabox($cp_name, $metabox, $prefix, $all_fields) {
                 <script type="text/javascript">
                     jQuery(document).ready(function($) {
 
-                        let rules = <?php echo json_encode($rules); ?>;
-                        console.log('RULES', rules);
-                        //load_custom_logic(rules);
+                        let rules = JSON.parse(<?php echo json_encode($rules); ?>);
+                        console.log('RULES', typeof rules, rules);
+                        load_custom_logic(rules);
 
                     });
                 </script>

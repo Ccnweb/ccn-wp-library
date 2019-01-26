@@ -94,6 +94,11 @@ function array_swap_chaussette($arr) {
      * devient [{toto => 'un', riri => 'quatre'}, {toto => 'deux', riri => 'cinq'}, {toto => 'trois', riri => 'six'}]
      */
 
+    if (!is_array($arr)) {
+        log\error('INVALID_ARGUMENT', 'in lib\array_swap_chaussette, $arr is not an array : $arr='.json_encode($arr));
+        return false;
+    }
+
     $new_arr = array();
     $keys = array_keys($arr);
     if (count($keys) < 1) return $arr;
@@ -308,7 +313,7 @@ function array_has_string_key($arr) {
  * 
  */
 
-function mapper_reverse($m) {
+function mapper_reverse($m) { // presque équivalent à array_flip
     /**
      * Reverse keys and values from the mapper
      * 

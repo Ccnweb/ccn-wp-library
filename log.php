@@ -36,8 +36,10 @@ function write($level, $title, $data, $category = "") {
     return file_put_contents($log_path, $msg, FILE_APPEND | LOCK_EX);//file_force_contents($log_path, $msg);
 }
 
-function error($title = "", $data = "") {
-    return write('ERROR', $title, $data);
+function error($title = "", $data = "", $return_value = false) {
+    // $return_value permet de renvoyer $return_value :)
+    write('ERROR', $title, $data);
+    return $return_value;
 }
 
 function warning($title = "", $data = "") {

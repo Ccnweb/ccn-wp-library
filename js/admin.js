@@ -14,10 +14,17 @@ function load_custom_logic(rules) {
     for (let rule of rules) {
         let source_selector = (rule.source_selector) ? rule.source_selector : '#' + rule.source_ids.join(', #');
 
-        jQuery(source_selector).change(function() {
-            if (check_rule_condition(rule)) $(rule.target_selector).show();
-            else $(rule.target_selector).hide();
-        });
+        // we define the current rule function
+        let curr_check_rule = function() {
+            if (check_rule_condition(rule)) jQuery(rule.target_selector).show();
+            else jQuery(rule.target_selector).hide();
+        }
+
+        // we execute the rule now
+        curr_check_rule();
+
+        // we register the rule in a change event
+        jQuery(source_selector).change(curr_check_rule);
     }
 }
 
@@ -28,7 +35,7 @@ function check_rule_condition(rule) {
     let list_values = rule.source_ids.map(id => getVal(id));
     let parsed_condition = rule.condition;
     for (let i = 0; i < rule.source_ids.length; i++) {
-        parsed_condition = parsed_condition.replace(new RegExp("\\{\\{"+rule.source_ids[i]+"\\}\\}", "g"), list_values[i]);
+        parsed_condition = parsed_condition.replace(new RegExp("\\{\\{"+rule.source_ids[i]+"\\}\\}", "g"), '"'+list_values[i]+'"');
     }
     return eval(parsed_condition);
 }
