@@ -27,7 +27,7 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields, $st
     $options = lib\assign_default($default_options, $options);
 
     // On initialise le conteneur form
-    $final_html = '<form id="msform">
+    $final_html = '<form id="'.$action_name.'_form" class="form-container">
                         {{step_points}}
                         {{html}}
                     </form>';

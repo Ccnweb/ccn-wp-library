@@ -30,7 +30,7 @@ function render_HTML_nom_prenom($field, $options = array()) {
 
     $options_default = array(
         'style'     => 'normal', // 'normal', ou 'collé', 
-        'label'     => 'label', // = 'label', 'placeholder', 'both'
+        'label'     => 'placeholder', // = 'label', 'placeholder', 'both'
         'value'     => array(
             'firstname' => '',
             'name' => ''

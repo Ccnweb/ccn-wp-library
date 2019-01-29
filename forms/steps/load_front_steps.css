@@ -3,13 +3,13 @@
 
 
 /*form styles*/
-#msform {
+form.form-container {
     text-align: center;
     position: relative;
     margin-top: 30px;
 }
 
-#msform fieldset {
+form.form-container fieldset {
     background: white;
     border: 0 none;
     border-radius: 0px;
@@ -24,12 +24,12 @@
 }
 
 /*Hide all except first fieldset*/
-#msform fieldset:not(:first-of-type) {
+form.form-container fieldset:not(:first-of-type) {
     display: none;
 }
 
 /*inputs*/
-#_msform input, #msform textarea {
+#_msform input, form.form-container textarea {
     padding: 15px;
     border: 1px solid #ccc;
     border-radius: 0px;
@@ -41,7 +41,7 @@
     font-size: 13px;
 }
 
-#_msform input:focus, #msform textarea:focus {
+#_msform input:focus, form.form-container textarea:focus {
     -moz-box-shadow: none !important;
     -webkit-box-shadow: none !important;
     box-shadow: none !important;
@@ -54,7 +54,7 @@
 }
 
 /*buttons*/
-#msform .action-button {
+form.form-container .action-button {
     width: 100px;
     background: var(--red);
     font-weight: bold;
@@ -66,11 +66,11 @@
     margin: 10px 5px;
 }
 
-#msform .action-button:hover, #msform .action-button:focus {
+form.form-container .action-button:hover, form.form-container .action-button:focus {
     box-shadow: 0 0 0 2px white, 0 0 0 3px #0920ee;
 }
 
-#msform .action-button-previous {
+form.form-container .action-button-previous {
     width: 100px;
     background: #C5C5F1;
     font-weight: bold;
@@ -82,7 +82,7 @@
     margin: 10px 5px;
 }
 
-#msform .action-button-previous:hover, #msform .action-button-previous:focus {
+form.form-container .action-button-previous:hover, form.form-container .action-button-previous:focus {
     box-shadow: 0 0 0 2px white, 0 0 0 3px #C5C5F1;
 }
 
