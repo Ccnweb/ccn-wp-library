@@ -175,7 +175,7 @@ function create_custom_post_metabox($cp_name, $metabox, $prefix, $all_fields) {
                 <script type="text/javascript">
                     jQuery(document).ready(function($) {
 
-                        let rules = JSON.parse(<?php echo json_encode($rules); ?>);
+                        let rules = <?php echo json_encode($rules); ?>;
                         console.log('RULES', typeof rules, rules);
                         load_custom_logic(rules);
 

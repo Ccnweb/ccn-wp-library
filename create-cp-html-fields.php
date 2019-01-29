@@ -18,7 +18,7 @@ lib\require_once_all_regex(CCN_LIBRARY_PLUGIN_DIR . '/html_fields/');
 use \ccn\lib\html_fields as fields;
 
 
-function create_HTML_repeat_group($group_repeat, $post) {
+function create_HTML_repeat_group($group_repeat, $post = false) {
     /**
      * Génération du code HTML pour un GROUP-REPEAT de fields
      * Cette fonction est appelée lors de la création de la metabox par exemple
@@ -36,7 +36,8 @@ function create_HTML_repeat_group($group_repeat, $post) {
     // == 1. == on récupère toutes les valeurs des repeatable_fields de ce groupe depuis la DB
     // ================================
 
-    $groups_values = get_post_meta($post->ID, $group_id, true);
+    $groups_values = array();
+    if ($post !== false) $groups_values = get_post_meta($post->ID, $group_id, true);
 
     // ================================
     // == 2. == on crée le code HTML avec tous les fields
@@ -99,21 +100,79 @@ function create_HTML_repeat_group($group_repeat, $post) {
 function create_HTML_field($field, $options) {
     /**
      * Génération du code HTML pour un field défini dans html_fields/
+     * 
      */
+
+    $html = '';
+
+    if ($field['type'] == 'REPEAT-GROUP') {
+        // we create the HTML code
+        $html = create_HTML_repeat_group($field);
+        // we wrap it if necessary
+        $wrapper = get_field_wrapper($field);
+        if ($wrapper !== false) $html = $wrapper['start'].$html.$wrapper['end'];
+        return $html;
+    }
 
     // case of simple HTML input elements
     if (in_array($field['type'], array('text', 'password', 'email', 'postal_code', 'date', 'number', 'tel'))) {
-        return fields\render_HTML_input($field, $options);
+        $html = fields\render_HTML_input($field, $options);
     // case of complex HTML elements
     } else if (function_exists('\ccn\lib\html_fields\render_HTML_'.$field['type'])) {
-        $res = call_user_func('\ccn\lib\html_fields\render_HTML_'.$field['type'], $field, $options);
-        if ($res === false) return '<div class="html_rendering_error">Impossible de faire le rendu du champs '.$field['type'].' (id = "'.$field['id'].'")</div>';
-        return $res;
+        $html = call_user_func('\ccn\lib\html_fields\render_HTML_'.$field['type'], $field, $options);
+        if ($html === false) return '<div class="html_rendering_error">Impossible de faire le rendu du champs '.$field['type'].' (id = "'.$field['id'].'")</div>';
     } else {
         die("Cannot render type ".$field['type']." in HTML");
         log\error("INVALID_HTML_FIELD_TYPE", "Cannot render type ".$field['type'].' in HTML');
-        return "<div class=\"html_rendering_error\">Cannot render type ".$field['type']." in HTML</div>";
+        $html = "<div class=\"html_rendering_error\">Cannot render type ".$field['type']." in HTML</div>";
     }
+
+    // we wrap it if necessary
+    if (isset($options['wrapper']) && !isset($field['wrapper'])) $field['wrapper'] = $options['wrapper'];
+    $wrapper = get_field_wrapper($field);
+    if ($wrapper !== false) $html = $wrapper['start'].$html.$wrapper['end'];
+
+
+    return $html;
+}
+
+function get_field_wrapper($field) { //TODO
+    /**
+     * returns something like array('start' => '<div class="wrapper_class">', 'end' => '</div>')
+     * to wrap some html in it
+     * 
+     */
+
+    if (!isset($field['wrapper']) && !isset($field['msg'])) return false;
+
+    if ($field['wrapper'] == 'bootstrap') {
+        $ids = get_field_ids($field);
+        $start = '<div class="form-group">';
+        $end = '</div>';
+
+        if ($field['type'] == 'email') {
+            $start .= '<div class="input-group"><div class="input-group-prepend"><label class="input-group-text" for="'.$ids[0].'">@</label></div>';
+            $end = '</div>' . $end;
+        } else $start .= '<label for="'.$ids[0].'">Email address</label>';
+
+        if (isset($field['msg']) && isset($field['msg']['info'])) $end = '<small class="form-msg-info" class="form-text text-muted">'.$field['msg']['info'].'</small>'.$end;
+        if (isset($field['msg']) && isset($field['msg']['error'])) $end = '<div class="invalid-feedback">'.$field['msg']['error'].'</div>' .$end;
+
+        $wrapper = array(
+            'start' => $start,
+            'end' => $end
+        );
+    } else if (is_array($field['wrapper']) && isset($field['wrapper']['start']) && isset($field['wrapper']['end'])) {
+        $wrapper = $field['wrapper'];
+        if (isset($field['msg']) && isset($field['msg']['info'])) $wrapper['end'] = '<small class="form-msg-info" class="form-text text-muted">'.$field['msg']['info'].'</small>'.$end;
+        if (isset($field['msg']) && isset($field['msg']['error'])) $wrapper['end'] = '<div class="invalid-feedback">'.$field['msg']['error'].'</div>' .$wrapper['end'];
+    } else if (isset($field['msg'])) {
+        $wrapper = array('start' => '', 'end' => '');
+        if (isset($field['msg']['error'])) $wrapper['end'] = $field['msg']['error'] . $wrapper['end'];
+        if (isset($field['msg']['info'])) $wrapper['end'] = $field['msg']['info'].$wrapper['end'];
+    }
+
+    return $wrapper;
 }
 
 
@@ -257,9 +316,10 @@ function prepare_fields($fields) {
                 log\error('INVALID_COPY_FIELD', 'in create-custom-post-type.php > create_custom_post_fields : Invalid id specified in copy key, no matching field found. Details : copy_id = '.$f['copy']);
                 continue; // saute cet élément de la boucle courante
             }
-            $new_id = $field['id'];
-            $field = array_values($el_to_copy_from)[0];
-            $field['id'] = $new_id;
+            //$new_id = $field['id'];
+            $new_field = array_values($el_to_copy_from)[0];
+            //$field['id'] = $new_id;
+            $field = array_merge($new_field, $field);
         }
         if (field_structure_is_valid($field)) array_push($new_fields, $field);
     
@@ -340,7 +400,7 @@ function parse_js_condition($metabox_id, $metabox, $fields) {
 
     }
 
-    return json_encode($rules);
+    return $rules;
 }
 
 function build_js_rule($target_id, $condition, $fields) {

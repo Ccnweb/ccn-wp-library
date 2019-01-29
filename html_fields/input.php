@@ -28,7 +28,7 @@ function render_HTML_input($field, $options = array()) {
 
     $options_default = array(
         'style'     => 'simple', // 'simple', ou 'bootstrap', 
-        'label'     => 'label', // = 'label', 'placeholder', 'both' (utile uniquement si style != 'simple')
+        'label'     => 'placeholder', // = 'label', 'placeholder', 'both' (utile uniquement si style != 'simple')
         //'label_position' => 'top', // 'top' ou 'left' pour dire où se situe le label par rapport au champs
         'value'     => '',
         'multiple'  => '', // indice qui indique de la combien-ième instance il s'agit
@@ -38,7 +38,7 @@ function render_HTML_input($field, $options = array()) {
     // == 2. == Paramètres HTML calculés
     // gestion des types particuliers:
     // --> date
-    $ifdate = ($field['type'] == 'date') ? ' data-date-format="dd-mm-yyyy" data-language="fr"' : '';
+    $ifdate = ($field['type'] == 'date') ? ' data-date-format="dd-mm-yyyy" data-language="fr" pattern="[0-9]{2}-[0-9]{2}-[0-9]{4}"' : '';
     $ifdateclass = ($field['type'] == 'date') ? ' datepicker-here' : '';
 
     // l'id du field HTML
@@ -75,12 +75,13 @@ function render_HTML_input($field, $options = array()) {
     // == 3.a == rendu HTML simple
 
     $input = '<input    type="'.get_HTML_field_input_type($field['type']).'" 
-                        class="form-control postbox'.$ifdateclass.'" 
+                        class="form-control postbox ccnlib_post'.$ifdateclass.'" 
                         id="'.$field_id_html.'" 
                         name="'.$field_name_html.'" 
                         '.$html_attributes.'
                         '.$ifdate.'
                         '.$ifregex.'
+                        '.$ifrequired.'
                         '.$ifdescription.' 
                         '.$ifplaceholder.' 
                         value="'.$options['value'].'"

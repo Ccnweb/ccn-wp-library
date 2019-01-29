@@ -8,6 +8,7 @@
 
 # Conventions pour créer de nouveaux html_fields
 
+* Tous les éléments HTML qui contiennent une valeur à envoyer par POST, doivent contenir la classe "ccnlib_post"
 * Il faut créer les fields pour le framework Bootstrap (voir la doc : https://getbootstrap.com/docs/4.0/components/forms/)
 * $options a souvent l'option `$options['style'] = 'simple'` qui permet de renvoyer l'élément HTML simple sans label ou wrapper <div> ou autre
 * Sauf dans le cas où style='simple' (cf point précédent), chaque champs est 

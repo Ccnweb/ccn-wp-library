@@ -50,7 +50,7 @@ function render_HTML_dropdown($field, $options = array()) {
 
     $html = '<div class="input-group">
                 '.$iflabel.'
-                <select class="custom-select" name="'.$field_name_html.'" id="'.$field_id_html.'">';
+                <select class="ccnlib_post custom-select" name="'.$field_name_html.'" id="'.$field_id_html.'">';
 
     foreach ($field['options'] as $value => $label) {
         $ifselected = ($value == $options['value']) ? 'selected' : '';

@@ -22,13 +22,13 @@ function render_HTML_address($field, $options = array()) {
             'postalcode' => 'Code postal',
             'city' => 'Ville'
         ),
+        'required'  => true,
     );
     $field = lib\assign_default($field_default, $field);
 
     $options_default = array(
         'style'     => 'normal', // 'normal', ou 'collé', 
         'label'     => 'placeholder', // = 'label', 'placeholder', 'both'
-        'required'  => true,
         'value'     => array(
             'street' => '',
             'postalcode' => '',
@@ -40,7 +40,8 @@ function render_HTML_address($field, $options = array()) {
     // == 2.a Rendu HTML de STREET ==
     $input_params = array(
         'id' => $field['id'].'_street',
-        'required' => $options['required']
+        'required' => $field['required'],
+        'html_label' => 'Rue',
     );
     $input_options = array(
         'style' => 'simple',
@@ -52,12 +53,14 @@ function render_HTML_address($field, $options = array()) {
     // == 2.b Rendu HTML de POSTAL CODE ==
     $input_params['id'] = $field['id'].'_postalcode';
     $input_params['type'] = 'postal_code';
+    $input_params['html_label'] = 'Code postal';
     $input_options['value'] = (isset($options['value']['postalcode'])) ? $options['value']['postalcode'] : '';
     $input_postalcode = render_HTML_input($input_params, $input_options);
 
     // == 2.c Rendu HTML de STREET ==
     $input_params['id'] = $field['id'].'_city';
     $input_params['type'] = 'text';
+    $input_params['html_label'] = 'Ville';
     $input_options['value'] = (isset($options['value']['city'])) ? $options['value']['city'] : '';
     $input_city = render_HTML_input($input_params, $input_options);
 

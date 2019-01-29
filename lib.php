@@ -3,6 +3,52 @@ namespace ccn\lib;
 
 require_once('log.php'); use \ccn\lib\log as log;
 
+require_once_all_regex(CCN_LIBRARY_PLUGIN_DIR . '/lib', ""); use \ccn\lib as lib;
+
+/* ==================================== */
+/*           HTML MANIPULATION          */
+/* ==================================== */
+
+function build_html($elements, $data) {
+    /**
+     * Creates an HTML string from elements and data
+     * in the following way
+     * 
+     * @param array $elements   e.g. array('titre' => '<h1>{{titre}}</h1>", 'contenu' => '<p>{{contenu}}<p>')
+     * @param array $data       e.g. array('contenu' => 'The content')
+     * 
+     * Returns :
+     * "<p>The content</p>"
+     * (it skips the h1 title, because it is not defined in $data)
+     * 
+     */
+
+    $html = '';
+    foreach ($elements as $key => $element) {
+        if (preg_match("/{{([^}]+)}}/", $element)) {
+            if (isset($data[$key])) $html .= parseTemplateString($element, $data) . "\n";
+        } else {
+            $html .= $element . "\n";
+        }
+    }
+    return $html;
+}
+
+function array_map_template($data_arr, $template) {
+    /**
+     * e.g.
+     * $data_arr = [[a: 1, b: 2], [a: 3, b: 4]];
+     * $template = '<p class="{{a}}">{{b}}</p>'
+     * RETURNS --> ['<p class="1">2</p>', '<p class="3">4</p>']
+     */
+
+    $html_list = array();
+    foreach ($data_arr as $data) {
+        $html_list[] = parseTemplateString($template, $data);
+    }
+    return $html_list;
+}
+
 /* ==================================== */
 /* CRÉE UN TAG <script> pour injecter du JS qqe part */
 /* ==================================== */
@@ -157,6 +203,8 @@ function array_transform_mapper($arr, $attr_key, $attr_val) {
     return $mapper;
 }
 
+
+
 function array_map_attr($arr, $attr) {
     /**
      * $attr = 'a'
@@ -170,6 +218,20 @@ function array_map_attr($arr, $attr) {
     }, $arr);
 }
 
+function array_add_field($arr, $attr, $fun) {
+    /**
+     * Adds a new attribute to all elements ($key => $el) of $arr 
+     * where $el[$attr] = $fun($key, $el, $arr)
+     */
+
+    $new_arr = array();
+    foreach ($arr as $key => $el) {
+        $new_arr[$key] = $el;
+        $new_arr[$key][$attr] = $fun($key, $el, $arr);
+    }
+    return $new_arr;
+}
+
 function array_filter_nonempty($arr) {
     /**
      * Renvoie un sous-array de $arr avec uniquement les éléments non-vides (fonction empty())
@@ -178,6 +240,23 @@ function array_filter_nonempty($arr) {
     return array_filter($arr, function($el) {
         return !empty($el);
     });
+}
+
+function array_choose($arr, $key, $key_arr) {
+    /**
+     * returns a sub-array of $arr 
+     * of elements $el where $el[$key] is in $key_arr
+     * 
+     * it's similar to array_filter($fields, function($f) use ($key, $key_arr) { return in_array($f[$key], $key_arr);});
+     * but the returned sub-array is in a different order : with array_choose, the order of the elements in $key_arr is the one returned
+     */
+
+    $new_arr = [];
+    foreach ($key_arr as $k) {
+        $el = array_find_by_key($arr, $key, $k);
+        if ($el !== false)  $new_arr[] = $el;
+    }
+    return $new_arr;
 }
 
 function array_find_by_key($arr, $attr, $val) {
@@ -227,7 +306,7 @@ function array_mask($arr, $mask) {
 }
 
 
-function assign_default($el1, $el2) {
+function assign_default($el1, $el2) { // TODO replace all calls to this by array_merge and delete this
     // It assigns values of $el2 to $el1.
     // $el1 and $el2 are assoc arrays
 

@@ -47,6 +47,7 @@ function render_HTML_nom_prenom($field, $options = array()) {
         'id' => $field['id'].'_firstname',
         'required' => (is_array($field['required'])) ? $field['required'][0]: $field['required'],
         'regex_pattern' => $field['regex_pattern'],
+        'html_label' => 'Prénom',
     );
     
     $input_options = array(
@@ -60,6 +61,7 @@ function render_HTML_nom_prenom($field, $options = array()) {
 
     // Nom gen HTML
     $input_params['id'] = $field['id'].'_name';
+    $input_params['html_label'] = 'Nom';
     $input_params['required'] = (is_array($field['required'])) ? $field['required'][0]: $field['required'];
     $input_options['value'] = (isset($options['value']['name'])) ? $options['value']['name'] : '';
     $input_nom = render_HTML_input($input_params, $input_options);

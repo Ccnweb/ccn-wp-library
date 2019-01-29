@@ -22,6 +22,7 @@ function render_HTML_radio($field, $options) {
             'value1' => 'label1',
             'value2' => 'label2',
         ),
+        'required' => true,
         'options_preciser' => array('value1'), // les id des options qui doivent avoir un champs 'input type="text"' en plus 
         'layout' => 'column', // 'row', 'column'
     );
@@ -32,7 +33,6 @@ function render_HTML_radio($field, $options) {
             'option' => '',
             'a_preciser' => array('a_preciser_key' => 'a_preciser_value'), // uniquement si le radio button a un ou des champs "à préciser"
         ),
-        'required' => true, // TODO
         'multiple'  => '', // indice qui indique de la combien-ième instance il s'agit
     );
     $options = lib\assign_default($options_default, $options);
@@ -52,7 +52,7 @@ function render_HTML_radio($field, $options) {
 
 
     // == 3. == HTML Bootstrap
-    $html = '<div class="form-radio-container">';
+    $html = '<div class="form-radio-container ccnlib_post">';
     $compteur = 1;
 
     $custom_html_version = false; // est-ce que les $field['options'] sont du code HTML ou non
@@ -66,6 +66,7 @@ function render_HTML_radio($field, $options) {
         if ($options['multiple'] != '') $curr_id .= '_'.$options['multiple'];
 
         $ifchecked = ($value == $options['value']['option']) ? 'checked': '';
+        $ifrequired = ($field['required']) ? 'required': '';
 
         // options_preciser permet d'ajouter un champs texte pour préciser une option du radio button
         // l'id du champs à préciser est construit de la manière suivante : {$field['id']}_field_{$value}_preciser
@@ -82,7 +83,7 @@ function render_HTML_radio($field, $options) {
 
         $if_a_preciser = (in_array($value, $field['options_preciser'])) ? '<input type="text" class="form-control" name="'.$field_name_preciser.'" id="'.$field_id_preciser.'" value="'.$ifvalue_a_preciser.'">' : '';
 
-        $radio_option = '<input class="form-check-input" type="radio" name="'.$field_name_html.'" id="'.$curr_id.'" value="'.$value.'" '.$ifchecked.'>
+        $radio_option = '<input class="form-check-input" type="radio" name="'.$field_name_html.'" id="'.$curr_id.'" value="'.$value.'" '.$ifchecked.' '.$ifrequired.'>
                         <label class="form-check-label" for="'.$curr_id.'">'.$label.'</label>';
 
         // si la radio option commence par '<', c'est du code HTML, on utilise le code HTML au lieu d'un label

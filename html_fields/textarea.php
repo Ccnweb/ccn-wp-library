@@ -38,7 +38,7 @@ function render_HTML_textarea($field, $options = array()) {
 
     return '<div class="form-group">
         '.$iflabel.'
-        <textarea   class="form-control" 
+        <textarea   class="form-control ccnlib_post" 
                     id="'.$field['id'].'_field" 
                     rows="'.$field['rows'].'" 
                     '.$ifplaceholder.'>'
