@@ -109,8 +109,8 @@ function get_field_ids_nom_prenom($field, $html = false) {
      * Fonction qui renvoie les ids des meta_key de ce field ou des ids des field HTML
      */
 
-    if (!$html) return [$field['id'].'_firstname', $field['id'].'_name'];
-    return [$field['id'].'_firstname_field', $field['id'].'_name_field'];
+    return [$field['id'].'_firstname', $field['id'].'_name'];
+    //return [$field['id'].'_firstname_field', $field['id'].'_name_field'];
 }
 
 function get_field_names_nom_prenom($field) {
@@ -147,11 +147,11 @@ function save_field_to_db_nom_prenom($field, $post_values) {
 
     $res = array();
 
-    if (array_key_exists($field['id'].'_firstname_field', $post_values)) {
-        $res[$field['id'].'_firstname'] = $post_values[$field['id'].'_firstname_field'];
+    if (array_key_exists($field['id'].'_firstname', $post_values)) {
+        $res[$field['id'].'_firstname'] = $post_values[$field['id'].'_firstname'];
     }
-    if (array_key_exists($field['id'].'_name_field', $post_values)) {
-        $res[$field['id'].'_name'] = $post_values[$field['id'].'_name_field'];
+    if (array_key_exists($field['id'].'_name', $post_values)) {
+        $res[$field['id'].'_name'] = $post_values[$field['id'].'_name'];
     }
 
     return $res;

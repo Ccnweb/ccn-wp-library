@@ -42,11 +42,11 @@ function render_HTML_input($field, $options = array()) {
     $ifdateclass = ($field['type'] == 'date') ? ' datepicker-here' : '';
 
     // l'id du field HTML
-    $field_id_html = $field['id']."_field";
+    $field_id_html = $field['id'];//."_field";
     if ($options['multiple'] != '') $field_id_html .= '_'.$options['multiple'];
 
     // le name du field HTML
-    $field_name_html =  $field['id']."_field";
+    $field_name_html =  $field['id']; // ."_field"
     if ($options['multiple'] != '') $field_name_html .= '[]';
     
     // regex
@@ -71,6 +71,8 @@ function render_HTML_input($field, $options = array()) {
     // TODO ajouter un message qui apparaît si le champs est mal rempli 
     $if_msg_error = ($field['msg_error']) ? '': '';
 
+    $ifhidden = ($options['multiple'] == 'hidden') ? 'disabled': '';
+
 
     // == 3.a == rendu HTML simple
 
@@ -84,7 +86,8 @@ function render_HTML_input($field, $options = array()) {
                         '.$ifrequired.'
                         '.$ifdescription.' 
                         '.$ifplaceholder.' 
-                        value="'.$options['value'].'"
+                        value="'.$options['value'].'" 
+                        '.$ifhidden.'
             >';
 
     if ($options['style'] == 'simple') return $input;

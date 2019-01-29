@@ -45,7 +45,7 @@ jQuery(document).ready(function($) {
 
         // on lance le spinner d'attente de la requête
         let submit_btn_html = jQuery(this).html();
-        jQuery(this).html('<i class="fa fa-spinner fa-spin></i>');
+        jQuery(this).html('<i class="fas fa-spinner fa-spin"></i>');
         
 
         let data = {'action': '{{action_name}}'};

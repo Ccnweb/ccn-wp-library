@@ -31,7 +31,7 @@ function render_HTML_textarea($field, $options = array()) {
     // == 2. == Paramètres HTML calculés
     // placeholder and label
     $ifplaceholder = (in_array($options['label'], array('placeholder', 'both'))) ? ' placeholder="'.$field['html_label'].'" ' : "";
-    $iflabel = (in_array($options['label'], array('label', 'both'))) ? '<label for="'.$field['id'].'_field">'.$field['html_label'].'</label>' : '';
+    $iflabel = (in_array($options['label'], array('label', 'both'))) ? '<label for="'.$field['id'].'">'.$field['html_label'].'</label>' : '';
 
 
     // == 3. == Rendu HTML
@@ -39,7 +39,8 @@ function render_HTML_textarea($field, $options = array()) {
     return '<div class="form-group">
         '.$iflabel.'
         <textarea   class="form-control ccnlib_post" 
-                    id="'.$field['id'].'_field" 
+                    id="'.$field['id'].'" 
+                    name="'.$field['id'].'" 
                     rows="'.$field['rows'].'" 
                     '.$ifplaceholder.'>'
             .$options['value'].

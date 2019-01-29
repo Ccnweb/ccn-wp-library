@@ -1,4 +1,7 @@
+/* source : https://codepen.io/designify-me/pen/qrJWpG */
+
 /*custom font*/
+
 @import url(https://fonts.googleapis.com/css?family=Montserrat);
 
 
@@ -9,7 +12,7 @@ form.form-container {
     margin-top: 30px;
 }
 
-form.form-container fieldset {
+form.form-container fieldset.step {
     background: white;
     border: 0 none;
     border-radius: 0px;
@@ -24,7 +27,7 @@ form.form-container fieldset {
 }
 
 /*Hide all except first fieldset*/
-form.form-container fieldset:not(:first-of-type) {
+form.form-container fieldset.step:not(:first-of-type) {
     display: none;
 }
 
@@ -45,7 +48,7 @@ form.form-container fieldset:not(:first-of-type) {
     -moz-box-shadow: none !important;
     -webkit-box-shadow: none !important;
     box-shadow: none !important;
-    border: 1px solid var(--red);
+    border: 1px solid var(--blue-klein);
     outline-width: 0;
     transition: All 0.5s ease-in;
     -webkit-transition: All 0.5s ease-in;

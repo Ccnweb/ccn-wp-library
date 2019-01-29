@@ -17,10 +17,11 @@ class Ccn_Validator {
         if ($string !== false) self::$bannedEmailDomains = json_decode($string, true);
     }
 
-    public static function isValidField($str, $type) {
+    public static function isValidField($str, $f) {
         /**
          * Tells if this is a valid string $str of type $type
          */
+        $type = $f['type'];
         if ($type == 'email') {
             return self::isValidEmail($str);
         } else if ($type == 'postal_code') {

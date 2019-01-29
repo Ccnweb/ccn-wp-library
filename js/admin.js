@@ -16,8 +16,17 @@ function load_custom_logic(rules) {
 
         // we define the current rule function
         let curr_check_rule = function() {
-            if (check_rule_condition(rule)) jQuery(rule.target_selector).show();
-            else jQuery(rule.target_selector).hide();
+            if (check_rule_condition(rule)) {
+                let target = jQuery(rule.target_selector)
+                target.show();
+                // we enable all fields tha are now shown
+                target.find('.ccnlib_post').removeAttr('disabled');
+            } else {
+                let target = jQuery(rule.target_selector)
+                target.hide();
+                // we disable all fields that are now hidden
+                target.find('.ccnlib_post').attr('disabled', 'disabled');
+            }
         }
 
         // we execute the rule now

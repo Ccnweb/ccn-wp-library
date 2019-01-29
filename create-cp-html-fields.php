@@ -48,14 +48,16 @@ function create_HTML_repeat_group($group_repeat, $post = false) {
     $html = '';
     $i = 0;
     if (!$groups_values) $groups_values = array();
+    if (gettype($groups_values) == 'string') $groups_values = json_decode($groups_values);
 
     foreach ($groups_values as $group) {
         $html .= '<div class="repeat-element">';
 
         foreach ($group_repeat['fields'] as $field) {
-            $ids_meta_keys = get_field_ids($field, true); // faut savoir, les ids des meta keys pour les repeat-groups, sont les mêmes que les ids HTML, càd avec le _field à la fin (sorry, c'est pas propre)
+            $ids_meta_keys = get_field_ids($field, false);
             $field_names = get_field_names($field);
-            $curr_values = (empty($field_names)) ? $group[$ids_meta_keys[0]] : lib\array_build($field_names, array_values(lib\extract_fields($group, $ids_meta_keys)));
+            $group_val = (isset($group[$ids_meta_keys[0]])) ? $group[$ids_meta_keys[0]] : "arg_undefined" ;
+            $curr_values = (empty($field_names)) ? $group_val : lib\array_build($field_names, array_values(lib\extract_fields($group, $ids_meta_keys)));
             $curr_options = array(
                 'value' => $curr_values,
                 'multiple' => strval($i),
@@ -77,7 +79,7 @@ function create_HTML_repeat_group($group_repeat, $post = false) {
     $html .= '<button id="'.$group_id.'_button_add_element" class="add_repeat_element">Ajouter</button>';
 
     // on ajoute le modèle à copier quand on clique sur +Ajouter (le jQuery reprendra alors ce code pour l'insérer)
-    $html .= '<div id="'.$group_id.'_hidden_group_model" style="display:none">
+    $html .= '<div id="'.$group_id.'_hidden_group_model" class="ccnlib_hidden_template" style="display:none">
                 <div class="repeat-element">';
                     foreach ($group_repeat['fields'] as $field) {
                         $html .= create_HTML_field($field, array('multiple' => 'hidden'));;
@@ -222,8 +224,9 @@ function get_field_ids($field, $html = false) {
         if ($res === false) log\error('HTML_FIELD_RETRIEVE_IDS_FAILED', 'Failed to retrieve field meta key ids for field with id='.$field['id'].' of type '.$field['type']);
         else return $res;
     } else {
-        if (!$html) return [$field['id']];
-        return [$field['id'].'_field'];
+        /* if (!$html) return [$field['id']];
+        return [$field['id'].'_field']; */
+        return [$field['id']];
     }
 }
 

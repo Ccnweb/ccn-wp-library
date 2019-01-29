@@ -117,8 +117,8 @@ function save_field_to_db_address($field, $post_values) {
 
     $res = array();
     foreach (['street', 'postalcode', 'city'] as $partie) {
-        if (array_key_exists($field['id'].'_'.$partie.'_field', $post_values)) {
-            $res[$field['id'].'_'.$partie] = $post_values[$field['id'].'_'.$partie.'_field'];
+        if (array_key_exists($field['id'].'_'.$partie, $post_values)) {
+            $res[$field['id'].'_'.$partie] = $post_values[$field['id'].'_'.$partie];
         }
     }
     return $res;

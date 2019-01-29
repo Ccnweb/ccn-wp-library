@@ -10,6 +10,7 @@
 
 require_once('lib.php'); use\ccn\lib as lib;
 require_once('log.php'); use \ccn\lib\log as log;
+require_once('create-cp-html-fields.php');
 // We require this for email/etc. validation
 require_once('Ccn_Validator.php');
 // This is for sending emails
@@ -35,27 +36,78 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
         'send_email' => array(), // (no email sent by default) array of arrays with elements like array('addresses' => array('coco@example.com'), 'subject' => 'id_of_subject_field', 'model' => 'path_to_html_email_model', 'model_args' => array('title' => 'Merci de nous contacter'))
         'send_to_user' => '', // if the email should be sent to the email address of the user, write here the id of the user email field
         'create_post' => true, // créer ou non un nouveau post de type $cp_id (normalement c'est oui, sauf pour les formulaire de contact par ex)
-		'on_before_save_post' => '', // fonction custom, exécutée juste avant de sauver le post
+        'computed_fields' => array(), // associative array(meta_key => function($_POST)) that creates new fields for the new post
+        'custom_checks' => '', // function that does additional checks before 
+		'on_before_save_post' => '', // fonction custom, or list of custom functions executed just before saving a post
 		'on_finish' => '', // fonction custom, exécutée juste avant de renvoyer la réponse du serveur
     );
     $options = lib\assign_default($default_options, $options);
     
+    $fields = prepare_fields($fields);
 
     $backend_callback = function() use ($cp_id, $fields, $validation, $html_email_models_dir, $options) {
+        $log_stack_location = 'create-cp-rest-backend.php > create_POST_backend > $backend_callback'; // this is the string included in the logs to indicate where the error came from
         $final_response = array('success' => true); // le json final qui sera renvoyé
 
-        // == 1. == sanitize the inputs
+        //log\info('POST DATA', $_POST);
+
+        // == 1.a == sanitize the inputs
         $sanitized = array();
         $meta_keys = array();
         $i=0;
         foreach ($fields as $f) {
-            if (isset($_POST[$f['id']])) {
-                $res = $validation->isValidField($_POST[$f['id']], $f['type']); // TODO ajouter la regex s'il y en a une et la valider
-                if (!$res['valid']) {echo json_encode(array("success" => false, "errno" => $res['reason'], 'descr' => $res['descr'])); die();}
-                $sanitized[$f['id']] = $_POST[$f['id']];
+            // case of REPEAT-GROUP
+            if ($f['type'] == 'REPEAT-GROUP') {
+
+                // TODO : add field validation also for repeat groups
+
+                $group_id = $f['id'];
+                $new = array();
+                $field_ids_html = lib\array_flatten(array_map(function($el_field) {return get_field_ids($el_field, true);}, $f['fields']));
+
+                $group_post_values = lib\extract_fields($_POST, $field_ids_html);
+                $new = lib\array_swap_chaussette($group_post_values);
+
+                // on enlève les éléments de $new qui ont un champs requis qui est vide
+                $mandatory_fields = get_required_fields($f);
+                $new = array_filter($new, function($el) use ($mandatory_fields) {
+                    $el_required = lib\extract_fields($el, $mandatory_fields);
+                    return count(array_filter($el_required, function($v) {return $v == '';})) == 0;
+                });
+
+                $sanitized[$f['id']] = json_encode($new);
+
+            // all other cases
+            } else {
+                $f_ids = get_field_ids($f);
+
+                foreach($f_ids as $f_id) {
+                    if (isset($_POST[$f_id])) {
+                        $res = $validation->isValidField($_POST[$f_id], $f); // TODO compléter la validation avec le field regex_pattern etc
+                        $res['valid'] = $res['valid'] || empty($_POST[$f_id]);
+                        if (!$res['valid']) {echo json_encode(array("success" => false, "errno" => $res['reason'], 'descr' => 'Invalid field '.$f_id.' : '. $res['descr'])); die();}
+                        $sanitized[$f_id] = $_POST[$f_id];
+                    }
+                }
+                $i++;
             }
-            $i++;
         }
+        // == 1.b == add computed fields
+        if (!empty($options['computed_fields'])) {
+            foreach ($options['computed_fields'] as $key => $fun) {
+                if (is_callable($fun)) {
+                    try {
+                        $sanitized[$key] = $fun($sanitized);
+                    } catch(Exception $e) {
+                        log\warning('CUSTOM_FUNCTION_FAILED', 'In '.$log_stack_location.' computed_field custom function failed for key='.$key.' and post_values='.json_encode($sanitized));
+                    }
+                } else {
+                    log\warning('INVALID_CUSTOM_FUNCTION', 'In '.$log_stack_location.' custom function for key '.$key.' is not callable');
+                }
+            }
+        }
+
+        //log\info('sanitized', $sanitized);
 
         
         if (post_type_exists($cp_id)) {
@@ -69,6 +121,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
                 if (isset($f['unique']) && $f['unique']) {
                     $customfields_vals = array_map(function($post) use ($f) {return $post[$f['id']][0];}, $liste_inscriptions_customfields);
                     if (in_array($sanitized[$f['id']], $customfields_vals)) {
+                        log\error('DUPLICATE_POST_KEY', 'In '.$log_stack_location.' Une ressource avec l\'attribut '.$f['id'].'='.$sanitized[$f['id']].' existe déjà');
                         echo json_encode(array('success' => false, 'errno' => 'DUPLICATE_POST_KEY', 'descr' => 'Une ressource avec l\'attribut '.$f['id'].'='.$sanitized[$f['id']].' existe déjà'));
                         die();
                     }
@@ -78,40 +131,60 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
             // == 3. == on crée un post
             if (options['create_post']) {
 				
-				// on exécute éventuellement une custom fonction on_before_save_post
-				if (function_exists($options['on_before_save_post'])){
-					$res = $options["on_before_save_post"]($sanitized);
-					echo "####".json_encode(isset($res))."####";
-					$final_response['on_before_save_post'] = $res;
-					if (!isset($res) || !isset($res['success']) || $res['success'] !== true) {
-						$final_response['success'] = false;
-						echo json_encode($final_response);
-						die();
-					}
-				}
+                // we execute all the on_before_save_post functions
+                if (!empty($options['on_before_save_post'])) {
+                    if (!is_array($options['on_before_save_post'])) $options['on_before_save_post'] = array($options['on_before_save_post']);
+                    foreach ($options['on_before_save_post'] as $fun) {
+
+                        $final_response['on_before_save_post'] = array();
+                        
+                        if (function_exists($fun)){
+                            $res = $fun($sanitized, $liste_inscriptions_customfields);
+                            $final_response['on_before_save_post'][] = $res;
+                            if (!isset($res) || !isset($res['success']) || $res['success'] !== true) {
+                                $final_response['success'] = false;
+                                echo json_encode($final_response);
+                                die();
+                            }
+                        }
+
+                    }
+                }
 				
                 $args = array(
                     'post_type' => $cp_id,
                     'meta_input' => $sanitized
                 );
-                $args['post_title'] = (isset($_POST['post_title'])) ? $_POST['post_title'] : 'undefined';
-                $args['post_status'] = (isset($_POST['post_status']) && $validation->isValidPostStatus($_POST['post_status'])['valid']) ? $_POST['post_status'] : 'publish';
-                $res = wp_insert_post($args);
-
+                $args['post_title'] = (isset($sanitized['post_title'])) ? $sanitized['post_title'] : 'undefined';
+                $args['post_status'] = (isset($sanitized['post_status']) && $validation->isValidPostStatus($sanitized['post_status'])['valid']) ? $sanitized['post_status'] : 'publish';
+                $res = 0;
+                try {
+                    $res = wp_insert_post($args);
+                } catch(Exception $e) {
+                    log\error('WP_INSERTION_FAILED_BRUTALLY', 'In '.$log_stack_location.' function wp_insert_post failed brutally. Message = '.$e->getMessage().'. With following argument : '.json_encode($args));
+                    echo json_encode(array('success' => false, 'error' => 'POST_INSERTION_FAILED', 'descr' => 'Post insertion failed brutally (wp_insert_post), returned message : '.$e->getMessage()));
+                    die();
+                }
+                
                 if ($res == 0) {
+                    log\error('WP_POST_INSERTION_FAILED', 'in '.$log_stack_location.' : post insertion failed '.$json_encode($res));
                     echo json_encode(
-						$final_response = array_merge($final_reponse,
-							array('success' => false, 'errno' => 'POST_CREATION_FAILED', 'descr' => 'Impossible de créer un post de type '.$cp_id.' avec les paramètres fournis :(')
+                        array_merge($final_reponse,
+                        array('success' => false, 'errno' => 'POST_CREATION_FAILED', 'descr' => 'Impossible de créer un post de type '.$cp_id.' avec les paramètres fournis :(')
 						)
 					);
                     die();
                 } else {
-                    $final_response = array_merge($final_reponse, array('success' => true, 'id' => $res, 'create_post' => true, 'email' => false));
+                    $final_response = array_merge($final_response, array('success' => true, 'id' => $res, 'create_post' => true, 'email' => false));
                 }
             }
+        } else {
+            log\error('UNKNOWN_POST_TYPE', 'in '.$log_stack_location.' : post type '.$cp_id.' does not exist');
+            $final_reponse = array_merge($final_reponse, array('success' => false, 'errno' => 'UNKNOWN_POST_TYPE', 'descr' => 'post type '.$cp_id.' does not exist'));
+            echo json_encode($final_response); die();
         }
-        
-        if (count($options['send_email'] > 0)) {
+
+        if (count($options['send_email']) > 0) {
 
             // == 4. == on envoie un email
             $final_response['email'] = array();

@@ -46,6 +46,9 @@ function ccnlib_scripts() {
                         'plugin_url' => CCN_LIBRARY_PLUGIN_URL
                     )
     );
+    // we inject the variable that contains our ajax rest endpoint for forms in the main
+    wp_enqueue_script( 'ccnlib-script', CCN_LIBRARY_PLUGIN_URL . 'forms/main.js', array('jquery'), '20190129', true );
+    wp_localize_script('ccnlib-script', 'ajax_url', admin_url( 'admin-ajax.php' ) );
 
     // load js in /forms
     $res = lib\enqueue_scripts_regex(

@@ -2,6 +2,9 @@ jQuery(document).ready(function($) {
 
     let group_id = "{{group_id}}";
 
+    // we disable all form controls that are in a hidden template group (for dynamic elements)
+    $('.ccnlib_hidden_template').find('.ccnlib_post').attr('disabled', 'disabled');
+
     // ===================================================
     // CLICK event for deleting a dynamic group of fields
     // ===================================================
@@ -20,12 +23,16 @@ jQuery(document).ready(function($) {
         let p = $(this).parent();
         let n = p.children().length -2;
         template_html.find('[id]').each(function() {
+            
             let curr_id = $(this).attr('id')
+            
+            $(this).removeAttr('disabled');
+
             if (/_hidden$/g.test(curr_id)) {
                 let myid = curr_id.replace('_hidden', '_'+n);
-                console.log('curr_id', curr_id, myid);
                 $(this).attr('id', myid)
             }
+
         });
 
         // on initialise les nouveaux éléments spéciaux (comme le air datepicker) si besoin

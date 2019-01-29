@@ -1,7 +1,9 @@
+// source: https://codepen.io/designify-me/pen/qrJWpG
+
 
 //jQuery time
 var current_fs, next_fs, previous_fs; //fieldsets
-let current_fs_index = 1;
+let current_fs_index = 0;
 var left, opacity, scale; //fieldset properties which we will animate
 var animating; //flag to prevent quick multi-click glitches
 

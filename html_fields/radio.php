@@ -23,7 +23,8 @@ function render_HTML_radio($field, $options) {
             'value2' => 'label2',
         ),
         'required' => true,
-        'options_preciser' => array('value1'), // les id des options qui doivent avoir un champs 'input type="text"' en plus 
+        'options_preciser' => array('value1*'), // les id des options qui doivent avoir un champs 'input type="text"' en plus. 
+                                                // Lorsque le nom est suivi d'une "*" c'est qu'ils sont requis si l'option est sélecitonnée
         'layout' => 'column', // 'row', 'column'
     );
     $field = lib\assign_default($field_default, $field);
@@ -50,6 +51,15 @@ function render_HTML_radio($field, $options) {
     // == 2. == PARAMS
     $ifinline = ($field['layout'] == 'row') ? ' form-check-inline' : ''; // display radio buttons in row (inline) or column
 
+    // options preciser
+    $required_preciser = array();
+    for ($i = 0; $i < count($field['options_preciser']); $i++) {
+        $v = $field['options_preciser'][$i];
+        if (substr($v, -1) == '*') {
+            $field['options_preciser'][$i] = substr($v, 0, -1);
+            $required_preciser[$field['options_preciser'][$i]] = true;
+        } else $required_preciser[$v] = false;
+    }
 
     // == 3. == HTML Bootstrap
     $html = '<div class="form-radio-container ccnlib_post">';
@@ -57,7 +67,7 @@ function render_HTML_radio($field, $options) {
 
     $custom_html_version = false; // est-ce que les $field['options'] sont du code HTML ou non
 
-    $field_name_html = $field['id'].'_field';
+    $field_name_html = $field['id'];
     if ($options['multiple'] != '') $field_name_html .= '[]';
 
     foreach ($field['options'] as $value => $label) {
@@ -81,7 +91,7 @@ function render_HTML_radio($field, $options) {
         $field_name_preciser = $curr_id.'_preciser';
         if ($options['multiple'] != '') $field_name_preciser .= '[]';
 
-        $if_a_preciser = (in_array($value, $field['options_preciser'])) ? '<input type="text" class="form-control" name="'.$field_name_preciser.'" id="'.$field_id_preciser.'" value="'.$ifvalue_a_preciser.'">' : '';
+        $if_a_preciser = (in_array($value, $field['options_preciser'])) ? '<input type="text" class="form-control ccnlib_post '.( ($required_preciser[$value]) ? 'preciser_required' : '' ).'" name="'.$field_name_preciser.'" id="'.$field_id_preciser.'" value="'.$ifvalue_a_preciser.'">' : '';
 
         $radio_option = '<input class="form-check-input" type="radio" name="'.$field_name_html.'" id="'.$curr_id.'" value="'.$value.'" '.$ifchecked.' '.$ifrequired.'>
                         <label class="form-check-label" for="'.$curr_id.'">'.$label.'</label>';
@@ -122,7 +132,7 @@ function get_field_ids_radio($field, $html = false) {
      */
 
     $ids = [$field['id']];
-    if ($html) $ids = [$field['id'].'_field'];
+    if ($html) $ids = [$field['id']];
     if (!isset($field['options_preciser'])) return $ids;
 
     foreach ($field['options_preciser'] as $id_preciser) {
@@ -175,13 +185,19 @@ function save_field_to_db_radio($field, $post_values) {
      */
 
     $res = array();
-    $field_id = $field['id'].'_field';
+    $field_html_id = $field['id'];//.'_field';
+    $field_html_name = $field['id'];
 
     // le champs radio en lui-même est sauvé par la fonction standard create_custom_post_savecbk()
     // mais si le radio button a un champs "à préciser", il faut renvoyer les identifiants et valeurs pour le sauver
     // son id est construit comme suit : {$field['id']}_field_{$value}_preciser)
 
-    $field_a_preciser = $field_id.'_'.$post_values[$field_id].'_preciser';
+    if (!isset($post_values[$field_html_name])) {
+        //log\error('MISSING_ARRAY_KEY', 'In radio.php > save_field_to_db_radio : cannot find key '.$field_html_name. ' in array '.json_encode($post_values));
+        return $res;
+    }
+
+    $field_a_preciser = $field['id'].'_'.$post_values[$field_html_name].'_preciser';
     if (array_key_exists($field_a_preciser, $post_values)) {
 
         $key = $field['id'].'_field_'.$post_values[$field_id].'_preciser';

@@ -21,6 +21,7 @@ function render_HTML_dropdown($field, $options = array()) {
             'value1' => 'label1',
             'value2' => 'label2',
         ),
+        'required' => true,
     );
     $field = lib\assign_default($field_default, $field);
 
@@ -34,23 +35,25 @@ function render_HTML_dropdown($field, $options = array()) {
     // == 2. == Paramètres HTML calculés
 
     // id HTML
-    $field_id_html = $field['id'].'_field';
+    $field_id_html = $field['id'];//.'_field';
     if ($options['multiple'] != '') $field_id_html .= '_'.$options['multiple'];
 
     // name HTML
-    $field_name_html = $field['id'].'_field';
+    $field_name_html = $field['id'];//.'_field';
     if ($options['multiple'] != '') $field_name_html .= '[]';
 
     $iflabel = ($options['label'] == 'label') ? '<div class="input-group-prepend">
-                    <label class="input-group-text" for="'.$field['id'].'_field">'.$field['html_label'].'</label>
+                    <label class="input-group-text" for="'.$field_id_html.'">'.$field['html_label'].'</label>
                 </div>' : '';
+
+    $ifrequired = ($field['required']) ? 'required': '';
 
 
     // == 3. == Rendu HTML Bootstrap
 
     $html = '<div class="input-group">
                 '.$iflabel.'
-                <select class="ccnlib_post custom-select" name="'.$field_name_html.'" id="'.$field_id_html.'">';
+                <select class="ccnlib_post custom-select" name="'.$field_name_html.'" id="'.$field_id_html.'" '.$ifrequired.'>';
 
     foreach ($field['options'] as $value => $label) {
         $ifselected = ($value == $options['value']) ? 'selected' : '';

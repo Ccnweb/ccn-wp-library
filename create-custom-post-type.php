@@ -65,7 +65,6 @@ function create_custom_post_fields($cp_name, $cp_slug, $metabox_opt, $prefix, $f
     $metabox_opt = lib\fix_if_wrong($metabox_opt, array(), 'is_array', 'in create-custom-post-type > $metabox_opt is not an array');
 
     foreach ($metabox_opt as $curr_metabox) {
-        
         create_custom_post_metabox($cp_name, $curr_metabox, $prefix, $fields);
     }
 
@@ -183,10 +182,6 @@ function create_custom_post_metabox($cp_name, $metabox, $prefix, $all_fields) {
                 </script>
                 <?php
 
-                /* $js_data = array(
-                    'rules' => parse_js_condition_old($metabox_id, $metabox, $fields),
-                );
-                echo lib\get_js_script(CCN_LIBRARY_PLUGIN_DIR . 'js/metabox_template.js.tpl', $js_data); */
             }
             
         };
@@ -206,6 +201,7 @@ function create_custom_post_metabox($cp_name, $metabox, $prefix, $all_fields) {
 
 // 3. Creates all the necessary cbks to save data from metaboxes
 function create_custom_post_savecbk($cp_name, $fields) {
+
     $save_data = function($post_id) use ($fields) {
 
         // Check the user's permissions.
@@ -222,7 +218,7 @@ function create_custom_post_savecbk($cp_name, $fields) {
                     log\error('INVALID_COPY_FIELD', 'Invalid id specified in copy key, no matching field found. Details : copy_id = '.$f['copy']);
                     continue; // saute cet élément de la boucle courante
                 }
-                $f = $el_to_copy_from[0];
+                $f = array_values($el_to_copy_from)[0];
             } 
 
             // ==========================================
@@ -257,7 +253,7 @@ function create_custom_post_savecbk($cp_name, $fields) {
             // ==========================================
             } else {
 
-                $field_id = $f['id'].'_field';
+                $field_id = $f['id'];
 
                 if (array_key_exists($field_id, $_POST)) {
                     update_post_meta(

@@ -9,6 +9,7 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields, $st
      * Creates an HTML form and registers it as a shortcode
      * 
      * TODO: argument $cp_id is not used !
+     * TODO: chack that fields in each step or switch is unique !!!!!!
      * 
      * @param string $action_name   le nom d'action inclut souvent le prefix, e.g. "ccnbtc_inscrire"
      * @param array $steps          les steps du formulaire, un peu comme des metabox
@@ -21,10 +22,21 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields, $st
         'title' => '',
         'submit_btn_text' => 'Ok',
         'fields' => array(), // éventuellement des options par défaut pour les fields, envoyées à create_HTML_field (TODO)
-        'computed_fields' => array(), // ici on définit les champs calculés, par ex 'post_title' => "() => getVal('wpsubs_key_name')"
-        'custom_logic_path' => '', // chemin ABSOLU vers un fichier .js qui contient la liste des règles JS spécifiques pour les formulaires complexes
+        'computed_fields' => array(), // TODO ici on définit les champs calculés, par ex 'post_title' => "() => getVal('wpsubs_key_name')"
+        'custom_logic_path' => '', // TODO chemin ABSOLU vers un fichier .js qui contient la liste des règles JS spécifiques pour les formulaires complexes
     );
     $options = lib\assign_default($default_options, $options);
+
+    // If $step is empty, we create a single step
+    if (empty($steps)) {
+        $steps = array(
+            array(
+                'id' => sanitize_title($options['title'], str_replace(' ', '-', $options['title'])),
+                'title' => $options['title'],
+                'fields' => array_map(function($f) {return $f['id'];}, $fields),
+            ),
+        );
+    }
 
     // On initialise le conteneur form
     $final_html = '<form id="'.$action_name.'_form" class="form-container">
@@ -36,14 +48,14 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields, $st
     $steps_ui_list = lib\array_add_field($steps, 'label', function($k, $s) {return (isset($s['label'])) ? $s['label'] : $s['title'] ;});
     $steps_ui_list[0]['active'] = 'active'; // this says "the first step should be the active step when you first load the form"
     $steps_ui_html = lib\array_map_template($steps_ui_list, '<li class="{{active}}">{{label}}</li>');
-    $steps_points_html =   '<ul id="ccnlib_progressbar">'.implode("\n", $steps_ui_html).'</ul>';
+    $steps_points_html = (count($steps) > 1) ? '<ul id="ccnlib_progressbar">'.implode("\n", $steps_ui_html).'</ul>' : '';
 
     // Crée l'HTML de chaque step
     $steps_html = array();
     $rules = array(); $field_rules = array(); // les règles/conditions JS à construire (globales à un switch ou locales à un field)
     $compteur = 0;
     foreach ($steps as $step) {
-        $step_html = '<fieldset>{{fieldset_html}}</fieldset>';
+        $step_html = '<fieldset class="'.((count($steps) > 1) ? 'step' : '').'">{{fieldset_html}}</fieldset>';
 
         $step_title_id = 'step-title-'.$step['id']; // l'id html de la balise de titre
 
@@ -77,6 +89,7 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields, $st
         $previous_next_buttons = '';
         if ($compteur > 0) $previous_next_buttons .= '<input type="button" name="previous" class="previous action-button-previous" value="Précédent"/>';
         if ($compteur < count($steps)-1) $previous_next_buttons .= '<input type="button" name="next" class="next action-button" value="Suivant"/>';
+        if ($compteur == count($steps)-1) $previous_next_buttons .= '<div class="submit-btn-container"><button id="'.$action_name.'_submit" class="btn btn-primary ccnlib_submit_btn" type="button">'.$options['submit_btn_text'].'</button></div>';
 
         $elements = array(
             'title'     => '<h2 id="'.$step_title_id.'" class="fs-title">{{title}}</h2>',
