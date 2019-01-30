@@ -10,7 +10,7 @@ jQuery(document).ready(function($) {
     // ===================================================
     let button_delete = function(e) {
         e.preventDefault(); // très important, sinon Wordpress recharge la page
-        $(this).parent().remove();
+        $(this).parent().fadeOut(300, function(){ $(this).remove();});
     };
     $('.ccnlib_delete_repeat_element').click(button_delete);
 

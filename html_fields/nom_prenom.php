@@ -47,7 +47,7 @@ function render_HTML_nom_prenom($field, $options = array()) {
         'id' => $field['id'].'_firstname',
         'required' => (is_array($field['required'])) ? $field['required'][0]: $field['required'],
         'regex_pattern' => $field['regex_pattern'],
-        'html_label' => 'Prénom',
+        'html_label' => $field['html_label']['prenom'],
     );
     
     $input_options = array(
@@ -61,8 +61,8 @@ function render_HTML_nom_prenom($field, $options = array()) {
 
     // Nom gen HTML
     $input_params['id'] = $field['id'].'_name';
-    $input_params['html_label'] = 'Nom';
-    $input_params['required'] = (is_array($field['required'])) ? $field['required'][0]: $field['required'];
+    $input_params['html_label'] = $field['html_label']['nom'];
+    $input_params['required'] = (is_array($field['required'])) ? $field['required'][1]: $field['required'];
     $input_options['value'] = (isset($options['value']['name'])) ? $options['value']['name'] : '';
     $input_nom = render_HTML_input($input_params, $input_options);
 
@@ -74,11 +74,11 @@ function render_HTML_nom_prenom($field, $options = array()) {
     $iflabel_nom = (in_array($options['label'], array('label', 'both'))) ? '<label class="sr-only" for="'.$field['id'].'_name">'.$field['html_label']['nom'].'</label>' : '';
 
     $html = '<div class="form-row align-items-center">
-                <div class="col-auto">
+                <div class="col pl-0">
                     '.$iflabel_prenom.'
                     '.$input_prenom.'
                 </div>
-                <div class="col-auto">
+                <div class="col pr-0">
                     '.$iflabel_nom.'
                     '.$input_nom.'
                 </div>

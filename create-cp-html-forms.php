@@ -22,7 +22,7 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields, $st
         'title' => '',
         'submit_btn_text' => 'Ok',
         'fields' => array(), // éventuellement des options par défaut pour les fields, envoyées à create_HTML_field (TODO)
-        'computed_fields' => array(), // TODO ici on définit les champs calculés, par ex 'post_title' => "() => getVal('wpsubs_key_name')"
+        //'computed_fields' => array(), // TO BE DEL car on ne met les computed fields que côté serveur. ici on définit les champs calculés, par ex 'post_title' => "() => getVal('wpsubs_key_name')"
         'custom_logic_path' => '', // TODO chemin ABSOLU vers un fichier .js qui contient la liste des règles JS spécifiques pour les formulaires complexes
     );
     $options = lib\assign_default($default_options, $options);
@@ -128,7 +128,7 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields, $st
     add_shortcode( $action_name.'-show-form', $render_html);
 }
 
-function create_HTML_form_shortcode_old($cp_id, $action_name, $options, $fields, $steps = array()) {
+function create_HTML_form_shortcode_old($cp_id, $action_name, $options, $fields, $steps = array()) { // TODO delete this function
     /**
      * Creates an HTML form and registers it as a shortcode
      * 

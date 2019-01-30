@@ -43,7 +43,7 @@ function create_HTML_repeat_group($group_repeat, $post = false) {
     // == 2. == on crée le code HTML avec tous les fields
     // ================================
 
-    $button_delete = '<button class="ccnlib_delete_repeat_element">Supprimer</button>';
+    $button_delete = '<button class="ccnlib_delete_repeat_element"><i class="fas fa-trash-alt"></i></button>';
 
     $html = '';
     $i = 0;
@@ -76,7 +76,7 @@ function create_HTML_repeat_group($group_repeat, $post = false) {
     // ================================
 
     // on ajoute un bouton +Ajouter pour pouvoir ajouter un nouvel élément
-    $html .= '<button id="'.$group_id.'_button_add_element" class="add_repeat_element">Ajouter</button>';
+    $html .= '<button id="'.$group_id.'_button_add_element" class="add_repeat_element"><i class="fas fa-plus"></i></button>';
 
     // on ajoute le modèle à copier quand on clique sur +Ajouter (le jQuery reprendra alors ce code pour l'insérer)
     $html .= '<div id="'.$group_id.'_hidden_group_model" class="ccnlib_hidden_template" style="display:none">
@@ -138,7 +138,7 @@ function create_HTML_field($field, $options) {
     return $html;
 }
 
-function get_field_wrapper($field) { //TODO
+function get_field_wrapper($field) {
     /**
      * returns something like array('start' => '<div class="wrapper_class">', 'end' => '</div>')
      * to wrap some html in it
@@ -153,7 +153,10 @@ function get_field_wrapper($field) { //TODO
         $end = '</div>';
 
         if ($field['type'] == 'email') {
-            $start .= '<div class="input-group"><div class="input-group-prepend"><label class="input-group-text" for="'.$ids[0].'">@</label></div>';
+            $start .= '<div class="input-group"><div class="input-group-prepend"><label class="input-group-text" for="'.$ids[0].'"><i class="fas fa-at"></i></label></div>';
+            $end = '</div>' . $end;
+        } else if ($field['type'] == 'date') {
+            $start .= '<div class="input-group"><div class="input-group-prepend"><label class="input-group-text" for="'.$ids[0].'"><i class="far fa-calendar-alt"></i></label></div>';
             $end = '</div>' . $end;
         } else $start .= '<label for="'.$ids[0].'">Email address</label>';
 

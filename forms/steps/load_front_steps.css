@@ -19,8 +19,8 @@ form.form-container fieldset.step {
     box-shadow: 0 0 15px 1px rgba(0, 0, 0, 0.4);
     padding: 20px 30px;
     box-sizing: border-box;
-    width: 80%;
-    margin: 0 10%;
+    /* width: 80%;
+    margin: 0 10%; */
 
     /*stacking fieldsets above each other*/
     position: relative;
@@ -60,33 +60,35 @@ form.form-container fieldset.step:not(:first-of-type) {
 form.form-container .action-button {
     width: 100px;
     background: var(--red);
-    font-weight: bold;
     color: white;
     border: 0 none;
     border-radius: 25px;
     cursor: pointer;
     padding: 10px 5px;
     margin: 10px 5px;
+    transition: all .1s;
 }
 
 form.form-container .action-button:hover, form.form-container .action-button:focus {
     box-shadow: 0 0 0 2px white, 0 0 0 3px #0920ee;
+    transition: all .2s;
 }
 
 form.form-container .action-button-previous {
     width: 100px;
-    background: #C5C5F1;
-    font-weight: bold;
+    background: #34acb645;;
     color: white;
     border: 0 none;
     border-radius: 25px;
     cursor: pointer;
     padding: 10px 5px;
     margin: 10px 5px;
+    transition: all .1s;
 }
 
 form.form-container .action-button-previous:hover, form.form-container .action-button-previous:focus {
     box-shadow: 0 0 0 2px white, 0 0 0 3px #C5C5F1;
+    transition: all .2s;
 }
 
 /*headings*/

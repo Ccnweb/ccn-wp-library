@@ -72,15 +72,15 @@ function render_HTML_address($field, $options = array()) {
     $iflabel_city = (in_array($options['label'], array('label', 'both'))) ? '<label class="sr-only" for="'.$field['id'].'_city">'.$field['html_label']['city'].'</label>' : '';
 
     $html = '<div class="form-row align-items-center">
-                <div class="col-auto">
+                <div class="w-100 mb-2">
                     '.$iflabel_street.'
                     '.$input_street.'
                 </div>
-                <div class="col-auto">
+                <div class="col pl-0">
                     '.$iflabel_postalcode.'
                     '.$input_postalcode.'
                 </div>
-                <div class="col-auto">
+                <div class="col pr-0">
                     '.$iflabel_city.'
                     '.$input_city.'
                 </div>
