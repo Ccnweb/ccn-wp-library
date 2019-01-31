@@ -2,7 +2,7 @@
 
 /*custom font*/
 
-@import url(https://fonts.googleapis.com/css?family=Montserrat);
+/*@import url(https://fonts.googleapis.com/css?family=Montserrat);*/
 
 
 /*form styles*/
@@ -70,7 +70,7 @@ form.form-container .action-button {
 }
 
 form.form-container .action-button:hover, form.form-container .action-button:focus {
-    box-shadow: 0 0 0 2px white, 0 0 0 3px #0920ee;
+    box-shadow: 0 0 0 2px white, 0 0 0 3px hsla(354, 77%, 86%, 1);
     transition: all .2s;
 }
 
@@ -109,25 +109,26 @@ form.form-container .action-button-previous:hover, form.form-container .action-b
 }
 
 /*progressbar*/
-#ccnlib_progressbar {
+.ccnlib_progressbar {
     margin-bottom: 30px;
     overflow: hidden;
     /*CSS counters to number the steps*/
     counter-reset: step;
 }
 
-#ccnlib_progressbar li {
+.ccnlib_progressbar li {
     list-style-type: none;
     color: white;
     text-transform: uppercase;
     font-size: 9px;
-    width: 33.33%;
+    /* width: 33.33%; */
+    width: auto;
     float: left;
     position: relative;
     letter-spacing: 1px;
 }
 
-#ccnlib_progressbar li:before {
+.ccnlib_progressbar li:before {
     content: counter(step);
     counter-increment: step;
     width: 24px;
@@ -142,7 +143,7 @@ form.form-container .action-button-previous:hover, form.form-container .action-b
 }
 
 /*progressbar connectors*/
-#ccnlib_progressbar li:after {
+.ccnlib_progressbar li:after {
     content: '';
     width: 100%;
     height: 2px;
@@ -153,14 +154,14 @@ form.form-container .action-button-previous:hover, form.form-container .action-b
     z-index: -1; /*put it behind the numbers*/
 }
 
-#ccnlib_progressbar li:first-child:after {
+.ccnlib_progressbar li:first-child:after {
     /*connector not needed before the first step*/
     content: none;
 }
 
 /*marking active/completed steps green*/
 /*The number of the step and the connector before it = green*/
-#ccnlib_progressbar li.active:before, #ccnlib_progressbar li.active:after {
+.ccnlib_progressbar li.active:before, .ccnlib_progressbar li.active:after {
     background: var(--red);
     color: white;
 }

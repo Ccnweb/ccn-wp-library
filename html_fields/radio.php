@@ -62,7 +62,7 @@ function render_HTML_radio($field, $options) {
     }
 
     // == 3. == HTML Bootstrap
-    $html = '<div class="form-radio-container ccnlib_post">';
+    $html = '<div class="form-radio-container ccnlib_post" id="'.$field['id'].'">';
     $compteur = 1;
 
     $custom_html_version = false; // est-ce que les $field['options'] sont du code HTML ou non

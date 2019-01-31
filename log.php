@@ -64,12 +64,14 @@ function error($title = "", $data = "", $return_value = false) {
     return $return_value;
 }
 
-function warning($title = "", $data = "") {
-    return write('WARNING', $title, $data);
+function warning($title = "", $data = "", $return_value = false) {
+    write('WARNING', $title, $data);
+    return $return_value;
 }
 
-function info($title = "", $data = "") {
-    return write('INFO', $title, $data);
+function info($title = "", $data = "", $return_value = false) {
+    write('INFO', $title, $data);
+    return $return_value;
 }
 
 // ================================================================

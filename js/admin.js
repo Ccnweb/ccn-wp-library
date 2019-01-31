@@ -1,3 +1,8 @@
+jQuery(document).ready(function($) {
+    // we disable hidden groups
+    $('.ccnlib_hidden_template').find('[name]').attr('disabled', 'disabled');
+})
+
 // fonctions utiles pour la custom logic des metabox
 
 function load_custom_logic(rules) {

@@ -18,6 +18,7 @@ require_once('lib.php'); use \ccn\lib as lib;
 require_once('log.php'); use \ccn\lib\log as log;
 
 // require all html field partial renderers from "html_fields" folder
+require_once(CCN_LIBRARY_PLUGIN_DIR . '/forms/lib.forms.php');
 lib\require_once_all_regex(CCN_LIBRARY_PLUGIN_DIR . '/html_fields/');
 use \ccn\lib\html_fields as fields;
 
@@ -53,7 +54,7 @@ function create_custom_post_fields($cp_name, $cp_slug, $metabox_opt, $prefix, $f
     //$metabox_opt = lib\assign_default($default_metabox_opt, $metabox_opt);
 
     // 0. on préprocesse les fields pour notamment gérer les champs 'copy'
-    $fields = prepare_fields($fields);
+    $fields = fields\prepare_fields($fields);
 
 
     // 1. on crée les metakeys
@@ -228,7 +229,7 @@ function create_custom_post_savecbk($cp_name, $fields) {
 
                 $group_id = $f['id'];
                 $new = array();
-                $field_ids_html = lib\array_flatten(array_map(function($el_field) {return get_field_ids($el_field, true);}, $f['fields']));
+                $field_ids_html = lib\array_flatten(array_map(function($el_field) {return fields\get_field_ids($el_field, true);}, $f['fields']));
 
                 $group_post_values = lib\extract_fields($_POST, $field_ids_html);
                 $new = lib\array_swap_chaussette($group_post_values);

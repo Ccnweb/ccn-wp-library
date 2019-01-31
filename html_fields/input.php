@@ -2,6 +2,7 @@
 namespace ccn\lib\html_fields;
 
 require_once(CCN_LIBRARY_PLUGIN_DIR . '/lib.php'); use \ccn\lib as lib;
+require_once(CCN_LIBRARY_PLUGIN_DIR . '/log.php'); use \ccn\lib\log as log;
 
 function render_HTML_input($field, $options = array()) {
      /**
@@ -9,7 +10,7 @@ function render_HTML_input($field, $options = array()) {
      * 
      * ## SOMMAIRE
      * 1. Gestion des options
-     * 2. Calcul des paramètres HTML poru le rendu
+     * 2. Calcul des paramètres HTML pour le rendu
      * 3. Rendu HTML
      */
 
@@ -75,6 +76,11 @@ function render_HTML_input($field, $options = array()) {
 
 
     // == 3.a == rendu HTML simple
+
+    if (gettype($options['value']) != 'string') {
+        log\warning('INVALID_HTML_INPUT_VALUE', 'in input.php > value has wrong type ('.gettype($options['value']).' instead of string) value='.json_encode($options['value']));
+        $options['value'] = json_encode($options['value']);
+    }
 
     $input = '<input    type="'.get_HTML_field_input_type($field['type']).'" 
                         class="form-control postbox ccnlib_post'.$ifdateclass.'" 

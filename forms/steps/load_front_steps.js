@@ -1,9 +1,17 @@
 // source: https://codepen.io/designify-me/pen/qrJWpG
 
+jQuery(document).ready(function($) {
+	$('.ccnlib_progressbar').each(function() {
+		let nb_points = $(this).find('li').length;
+		let ratio = 100.0 / nb_points;
+		$(this).find('li').css({width: ratio + '%'})
+	});
+});
+
 
 //jQuery time
 var current_fs, next_fs, previous_fs; //fieldsets
-let current_fs_index = 0;
+let current_fs_index = 0; // TODO gérer quand il y a plusiuers forms à steps dans la même page...
 var left, opacity, scale; //fieldset properties which we will animate
 var animating; //flag to prevent quick multi-click glitches
 
@@ -13,6 +21,7 @@ jQuery(".next").click(function(){
 	animating = true;
 	
 	current_fs = jQuery(this).parent(); // current <fieldset>
+	current_form = current_fs.closest('form.form-container'); // current <form>
 	next_fs = jQuery(this).parent().next();
 	
 	// we check validity of all fields in current fieldset
@@ -24,7 +33,7 @@ jQuery(".next").click(function(){
 
 	//activate next step on progressbar using the index of next_fs
 	current_fs_index++;
-	jQuery("#ccnlib_progressbar > li").eq(current_fs_index).addClass("active");
+	current_form.find("ul.ccnlib_progressbar > li").eq(current_fs_index).addClass("active");
 	
 	//show the next fieldset
 	next_fs.show(); 
@@ -59,10 +68,11 @@ jQuery(".previous").click(function(){
 	animating = true;
 	
 	current_fs = jQuery(this).parent();
+	current_form = current_fs.closest('form.form-container'); // current <form>
     previous_fs = jQuery(this).parent().prev();
 	
 	//de-activate current step on progressbar
-	jQuery("#ccnlib_progressbar li").eq(current_fs_index).removeClass("active");
+	current_form.find("ul.ccnlib_progressbar > li").eq(current_fs_index).removeClass("active");
 	current_fs_index--;
 	
 	//show the previous fieldset
@@ -90,6 +100,6 @@ jQuery(".previous").click(function(){
 	});
 });
 
-jQuery(".submit").click(function(){
+/* jQuery(".submit").click(function(){
 	return false;
-})
+}) */

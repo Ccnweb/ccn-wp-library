@@ -21,7 +21,7 @@ function send($data, $to_addresses, $subject, $model, $model_args = array(), $op
      * 3. On parse le contenu du message
      */
 
-    $html_email_models_dir = CCN_LIBRARY_PLUGIN_DIR . '/email_models'; // default directory to find email templates/models
+    $html_email_models_dir = CCN_LIBRARY_PLUGIN_DIR . '/email/email_models'; // default directory to find email templates/models
 
     $default_options = array(
         'computed_data' => array(), // associative array like array('field1' => function($input_data) {return $input_data['title'] . '!';})
@@ -52,9 +52,9 @@ function send($data, $to_addresses, $subject, $model, $model_args = array(), $op
     
 
     // == 2. == avec quel sujet
-    $subject = ($subject != '' && isset($data[$subject])) ? $data[$subject]  : 'Nouveau message de '.get_site_url() ;
+    $subject = (isset($data[$subject])) ? $data[$subject]  : 'Nouveau message de '.get_site_url() ;
     // si ce n'est pas un id, c'est un sujet fixe prédéfini avec éventuellement des {{...}} pour des parties dynamiques dans le sujet
-    if ($subject != '' && !isset($data[$subject])) $subject = lib\parseTemplateString($subject, $data); 
+    $subject = lib\parseTemplateString($subject, $data); 
     
 
     // == 3. == et quel message
@@ -69,7 +69,11 @@ function send($data, $to_addresses, $subject, $model, $model_args = array(), $op
     }
 
     // on parse le message/modèle au cas où il contient des {{...}}
-    $model_args = lib\array_map_assoc($model_args, function($key, $val) use ($data) {return lib\parseTemplateString($val, $data);});
+    $model_args = lib\array_map_assoc($model_args, function($key, $val) use ($data) {
+        if (is_callable($val)) return lib\parseTemplateString($val($data), $data);
+        else if (gettype($val) == 'string') return lib\parseTemplateString($val, $data);
+        else return log\warning('INVALID_EMAIL_MODEL_ARGUMENT', 'In send_email.php > send : invalid model_arg value for $key='.json_encode($key).' Value for this key is neither a function nor a string, it is a '.gettype($val), '');
+    });
     $model_args = lib\assign_default($model_args, $data);
     $message = lib\parseTemplateString($message, $model_args);
 

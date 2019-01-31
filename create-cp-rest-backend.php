@@ -10,6 +10,10 @@
 
 require_once('lib.php'); use\ccn\lib as lib;
 require_once('log.php'); use \ccn\lib\log as log;
+// forms library
+require_once(CCN_LIBRARY_PLUGIN_DIR . '/forms/lib.forms.php');
+use \ccn\lib\html_fields as fields;
+
 require_once('create-cp-html-fields.php');
 // We require this for email/etc. validation
 require_once('Ccn_Validator.php');
@@ -43,7 +47,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
     );
     $options = lib\assign_default($default_options, $options);
     
-    $fields = prepare_fields($fields);
+    $fields = fields\prepare_fields($fields);
 
     $backend_callback = function() use ($cp_id, $fields, $validation, $html_email_models_dir, $options) {
         $log_stack_location = 'create-cp-rest-backend.php > create_POST_backend > $backend_callback'; // this is the string included in the logs to indicate where the error came from
@@ -63,7 +67,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
 
                 $group_id = $f['id'];
                 $new = array();
-                $field_ids_html = lib\array_flatten(array_map(function($el_field) {return get_field_ids($el_field, true);}, $f['fields']));
+                $field_ids_html = lib\array_flatten(array_map(function($el_field) {return fields\get_field_ids($el_field, true);}, $f['fields']));
 
                 $group_post_values = lib\extract_fields($_POST, $field_ids_html);
                 $new = lib\array_swap_chaussette($group_post_values);
@@ -79,7 +83,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
 
             // all other cases
             } else {
-                $f_ids = get_field_ids($f);
+                $f_ids = fields\get_field_ids($f);
 
                 foreach($f_ids as $f_id) {
                     if (isset($_POST[$f_id])) {
@@ -107,7 +111,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
             }
         }
 
-        //log\info('sanitized', $sanitized);
+        log\info('sanitized', $sanitized);
 
         
         if (post_type_exists($cp_id)) {
@@ -190,8 +194,20 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
             $final_response['email'] = array();
 
             foreach ($options['send_email'] as $email_obj) {
+                // we add additional {...}_pretty attribtues to $sanitized for dropdown and radio elements
+                $pretty_mapper = array_map(function($f) {
+                    if (($f['type'] == 'radio' || $f['type'] == 'dropdown') && isset($f['options'])) {
+                        return $f['options'];
+                    }
+                    return array();
+                }, $fields);
+                $pretty_mapper = lib\array_flatten($pretty_mapper);
+                foreach ($sanitized as $key => $val) if (gettype($val) == 'string' && isset($pretty_mapper[$val])) $sanitized[$key."__pretty"] = $pretty_mapper[$val];
+                log\info('LODATE DIO !', $sanitized);
+
+                // we send the email
                 $send_result = email\send( 
-                            $data           = $_POST, 
+                            $data           = $sanitized, 
                             $to_addresses   = $email_obj['addresses'], 
                             $subject        = $email_obj['subject'],
                             $model          = $email_obj['model'],

@@ -2,6 +2,7 @@
 
 require_once('log.php'); use \ccn\lib\log as log;
 require_once('lib.php'); use \ccn\lib as lib;
+require_once(CCN_LIBRARY_PLUGIN_DIR . '/forms/lib.forms.php'); use \ccn\lib\html_fields as fields;
 require_once('create-cp-html-fields.php');
 
 function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields, $steps = array()) {
@@ -16,7 +17,7 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields, $st
      * 
      */
 
-    $fields = prepare_fields($fields);
+    $fields = fields\prepare_fields($fields);
 
     $default_options = array(
         'title' => '',
@@ -48,7 +49,7 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields, $st
     $steps_ui_list = lib\array_add_field($steps, 'label', function($k, $s) {return (isset($s['label'])) ? $s['label'] : $s['title'] ;});
     $steps_ui_list[0]['active'] = 'active'; // this says "the first step should be the active step when you first load the form"
     $steps_ui_html = lib\array_map_template($steps_ui_list, '<li class="{{active}}">{{label}}</li>');
-    $steps_points_html = (count($steps) > 1) ? '<ul id="ccnlib_progressbar">'.implode("\n", $steps_ui_html).'</ul>' : '';
+    $steps_points_html = (count($steps) > 1) ? '<ul class="ccnlib_progressbar">'.implode("\n", $steps_ui_html).'</ul>' : '';
 
     // Crée l'HTML de chaque step
     $steps_html = array();
@@ -139,7 +140,7 @@ function create_HTML_form_shortcode_old($cp_id, $action_name, $options, $fields,
      * 
      */
 
-    $fields = prepare_fields($fields);
+    $fields = fields\prepare_fields($fields);
 
     $default_options = array(
         'title' => '',

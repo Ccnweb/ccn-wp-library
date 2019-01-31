@@ -15,6 +15,7 @@ require_once('lib.php'); use \ccn\lib as lib;
 
 // require all html field partial renderers from "html_fields" folder
 lib\require_once_all_regex(CCN_LIBRARY_PLUGIN_DIR . '/html_fields/');
+require_once(CCN_LIBRARY_PLUGIN_DIR . '/forms/lib.forms.php');
 use \ccn\lib\html_fields as fields;
 
 
@@ -54,8 +55,8 @@ function create_HTML_repeat_group($group_repeat, $post = false) {
         $html .= '<div class="repeat-element">';
 
         foreach ($group_repeat['fields'] as $field) {
-            $ids_meta_keys = get_field_ids($field, false);
-            $field_names = get_field_names($field);
+            $ids_meta_keys = fields\get_field_ids($field, false);
+            $field_names = fields\get_field_names($field);
             $group_val = (isset($group[$ids_meta_keys[0]])) ? $group[$ids_meta_keys[0]] : "arg_undefined" ;
             $curr_values = (empty($field_names)) ? $group_val : lib\array_build($field_names, array_values(lib\extract_fields($group, $ids_meta_keys)));
             $curr_options = array(
@@ -107,6 +108,7 @@ function create_HTML_field($field, $options) {
 
     $html = '';
 
+    // case of a repeatable/dynamic field
     if ($field['type'] == 'REPEAT-GROUP') {
         // we create the HTML code
         $html = create_HTML_repeat_group($field);
@@ -114,6 +116,11 @@ function create_HTML_field($field, $options) {
         $wrapper = get_field_wrapper($field);
         if ($wrapper !== false) $html = $wrapper['start'].$html.$wrapper['end'];
         return $html;
+    }
+
+    // case of a custom html field
+    if ($field['type'] == 'html') {
+        return '<div class="ccnlib-custom-html-field" id="'.$field['id'].'">'.$field['html'].'</div>';
     }
 
     // case of simple HTML input elements
@@ -148,7 +155,7 @@ function get_field_wrapper($field) {
     if (!isset($field['wrapper']) && !isset($field['msg'])) return false;
 
     if ($field['wrapper'] == 'bootstrap') {
-        $ids = get_field_ids($field);
+        $ids = fields\get_field_ids($field);
         $start = '<div class="form-group">';
         $end = '</div>';
 
@@ -212,49 +219,12 @@ function get_HTML_field_input_type_old($mytype) { // TODO delete this
     }
 }
 
-function get_field_ids($field, $html = false) {
-    /**
-     * Fait appel aux fonctions de type get_field_ids_{nom_du_field} qui sont stockées dans le dossier html_fields/
-     * Elle renvoie la liste des ID des meta_keys de ce field
-     * 
-     * @param bool $html    indique s'il faut les IDs des meta keys ou des fields HTML ('ccnlib_my_key' ou 'ccnlib_my_key_field')
-     * 
-     */
-
-    
-    if (function_exists('\ccn\lib\html_fields\get_field_ids_'.$field['type'])) {
-        $res = call_user_func('\ccn\lib\html_fields\get_field_ids_'.$field['type'], $field, $html);
-        if ($res === false) log\error('HTML_FIELD_RETRIEVE_IDS_FAILED', 'Failed to retrieve field meta key ids for field with id='.$field['id'].' of type '.$field['type']);
-        else return $res;
-    } else {
-        /* if (!$html) return [$field['id']];
-        return [$field['id'].'_field']; */
-        return [$field['id']];
-    }
-}
-
-function get_field_names($field) {
-    /**
-     * Fait appel aux fonctions de type get_field_names_{type_du_field} qui sont stockées dans le dossier html_fields/
-     * Elle renvoie la liste des noms des keys pour $options['value'] de ce field
-     * 
-     */
-    
-    if (function_exists('\ccn\lib\html_fields\get_field_names_'.$field['type'])) {
-        $res = call_user_func('\ccn\lib\html_fields\get_field_names_'.$field['type'], $field);
-        if ($res === false) log\error('HTML_FIELD_RETRIEVE_NAMES_FAILED', 'Failed to retrieve field names for field with id='.$field['id'].' of type '.$field['type']);
-        else return $res;
-    } else {
-        return [];
-    }
-}
-
 function get_required_fields($field, $html = false) {
     /**
      * renvoie les meta keys requises par $field
      */
 
-    $meta_keys = get_field_ids($field, $html);
+    $meta_keys = fields\get_field_ids($field, $html);
 
     if (isset($field['required'])) {
         if (gettype($field['required']) == 'boolean' && $field['required']) return $meta_keys;
@@ -287,7 +257,7 @@ function get_value_from_db($post, $field) {
         }
         return $res;
     } else {
-        $list_names = get_field_names($field);
+        $list_names = fields\get_field_names($field);
 
         if (!empty($list_names)) {
             $res = array('value' => array());
@@ -301,73 +271,6 @@ function get_value_from_db($post, $field) {
             return array('value' => $value);
         }
     }
-}
-
-function prepare_fields($fields) {
-    /**
-     * Prépare les champs $fields en parsant les champs 'copy'
-     * et en enlevant les champs invalides
-     */
-
-    $b = fields_structure_is_valid($fields);
-
-    $new_fields = array();
-
-    foreach ($fields as $field) {
-    
-        // on gère les champs "copy", ce sont les champs qui sont copiés d'autres champs existants
-        if (isset($field['copy'])) {
-            $el_to_copy_from = array_filter($fields, function($el) use ($field) {return $el['id'] == $field['copy'];});
-            if (empty($el_to_copy_from)) {
-                log\error('INVALID_COPY_FIELD', 'in create-custom-post-type.php > create_custom_post_fields : Invalid id specified in copy key, no matching field found. Details : copy_id = '.$f['copy']);
-                continue; // saute cet élément de la boucle courante
-            }
-            //$new_id = $field['id'];
-            $new_field = array_values($el_to_copy_from)[0];
-            //$field['id'] = $new_id;
-            $field = array_merge($new_field, $field);
-        }
-        if (field_structure_is_valid($field)) array_push($new_fields, $field);
-    
-    }
-    
-    return $new_fields;
-}
-
-function fields_structure_is_valid($fields) {
-    /**
-     * Vérifie que les fields en paramètre sont tous bien valides
-     */
-
-    // CHECK 1 = Tests unitaires
-    $restants = array_filter($fields, 'field_structure_is_valid');
-    if (count($restants) < count($fields)) return false;
-
-    // CHECK 2 = Tous les id sont uniques
-    // TODO
-
-    // CHECK 3 = Tous les id dans les champs copy existent
-    // TODO
-
-
-    return true;
-    
-}
-
-function field_structure_is_valid($field) {
-    /**
-     * Vérifie que le field en paramètre est bien valide
-     */
-
-    if (!isset($field['id'])) {log\error('INVALID_FIELD_STRUCTURE', 'field has no "id" attribute : json='.json_encode($field)); return false;}
-    if (!isset($field['type']) && !isset($field['copy'])) {log\error('INVALID_FIELD_STRUCTURE', 'field has no "type" or "copy" attribute : json='.json_encode($field)); return false;}
-
-    // TODO regarder dans les champs 'REPEAT-GROUP' aussi...
-
-    // TODO vérifier que le champs required est valide ou omis
-    // doit etre un bool ou un array de même longueur que get_field_ids($field)
-
-    return true;
 }
 
 
@@ -425,8 +328,8 @@ function build_js_rule($target_id, $condition, $fields) {
     // =============================================
     $all_field_ids = array_map(function($f) {
         return array(
-            'meta_id' => get_field_ids($f, false), // ids des meta keys
-            'html_id' => get_field_ids($f, true), // ids HTML
+            'meta_id' => fields\get_field_ids($f, false), // ids des meta keys
+            'html_id' => fields\get_field_ids($f, true), // ids HTML
         );
     }, $fields);
     $id_mapper = lib\array_transform_mapper($all_field_ids, 'meta_id', 'html_id');

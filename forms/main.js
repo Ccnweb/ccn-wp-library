@@ -221,8 +221,8 @@ function load_custom_logic(rules) {
 
         // we define the current rule function
         let curr_check_rule = function() {
-            if (check_rule_condition(rule)) jQuery(rule.target_selector).show();
-            else jQuery(rule.target_selector).hide();
+            if (check_rule_condition(rule)) jQuery(rule.target_selector).show({duration: 300, easing: 'swing'});
+            else jQuery(rule.target_selector).hide({duration: 300, easing: 'swing'});
         }
 
         // we execute the rule now
@@ -273,4 +273,75 @@ function getVal(el_id) { // existe aussi dans forms-template.js.tpl
         return el.val().trim();
     }
     return 'unknown_tagname ' + tagname;
+}
+
+function get_select_options(el) {
+    let options = [];
+    let html_options = el[0].options;
+    for(i = 0; i < html_options.length; i++) {
+        options.push(html_options[i].value)
+    }
+    return options
+}
+
+
+// ================================================
+//          FUNCTIONS FOR TESTING PURPOSE
+// ================================================
+
+function populate_forms(form_id = null) {
+    let form = form_id;
+    if (!form_id) form = jQuery('form.form-container');
+    if (typeof form_id == 'string') form = jQuery('#'+form_id);
+    if (form.length < 1) return console.log('Impossible de trouver le formulaire à populer');
+
+    // we get all elements to be populated
+    let form_elements = form.find('.ccnlib_post');
+
+    // we initialize variables
+    let alphabet = 'a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z'.split(',');
+    let prenoms = ['jonas', 'bruce', 'galadriel', 'aragorn'];
+    let noms = ['baugé', 'parker', 'lepetit', 'bergstein', 'skywalker'];
+    let prenoms_noms = ['Peter Parker', 'Bruce Banner', 'Tony Stark', 'Bruce Wayne', 'Clark Kent', 'Luke Skywalker'];
+    let domaines = ['gmail.com', 'chemin-neuf.org', 'yahoo.fr', 'wanadoo.fr', 'mail.com'];
+    let adjectifs = ['great', ''];
+    let streets = ['Chemin de traverse', 'Montée du Chemin Neuf', 'Pentagon street'];
+    let cities = ['Mountain View', 'Palo Alto', 'Beijing'];
+    let gen_number = (n = 5) => Array.from(Array(n), () => Math.floor(Math.random()*10)).join('');
+    let gen_string = (n = 5) => pick_alea(alphabet, n).join('');
+    let pick_alea = (arr, n = 1) => (n == 1) ? arr[Math.round(Math.random()*(arr.length-1))] : Array.from(Array(n), () => arr[Math.round(Math.random()*(arr.length-1))]);
+    let firstLetterUp = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+    let gen_prenom_nom = () => (Math.random() > 0.5) ? [firstLetterUp(pick_alea(prenoms)), firstLetterUp(pick_alea(noms))] : pick_alea(prenoms_noms).split(' ') ;
+    let gen_email = () => gen_prenom_nom().join('.').toLowerCase() + '@' + pick_alea(domaines);
+    let gen_birthdate = () => '0' + Math.floor(Math.random()*10) + '-0' + Math.floor(Math.random()*10) + '-19' + gen_number(2);
+    let gen_street = () => gen_number(pick_alea([2,2,3])) + ', ' + pick_alea(streets);
+    let gen_city = () => pick_alea(cities);
+    let gen_postalcode = () => Math.round(Math.random()*100000).toString();
+
+    form_elements.each(function() {
+        let el = jQuery(this);
+        let tag = el.prop('tagName');
+        let name = el.attr('name');
+        let prenom_nom = gen_prenom_nom();
+
+        if (tag == 'INPUT' && !el.val()) {
+            let type = el.attr('type');
+            if (type == 'email') el.val(gen_email());
+            else if (type == 'text' && /(_firstname|prenom)/gi.test(name)) {el.val(prenom_nom[0]); prenom_nom = gen_prenom_nom()}
+            else if (type == 'text' && /(_name|nom)/gi.test(name)) {el.val(prenom_nom[1]); prenom_nom = gen_prenom_nom()}
+            else if (type == 'text' && el.hasClass('datepicker-here')) el.val(gen_birthdate());
+            else if (type == 'text' && /(street|rue)/gi.test(name)) el.val(gen_street());
+            else if (type == 'text' && /(_postalcode)/gi.test(name)) el.val(gen_postalcode());
+            else if (type == 'text' && /(_city|ville)/gi.test(name)) el.val(gen_city());
+            else if (type == 'text') el.val(gen_string(7));
+            else if (type == 'tel') el.val(gen_number(10));
+        } else if (tag == 'SELECT') {
+            let options = get_select_options(el);
+            el.val(pick_alea(options));
+        } else if (el.hasClass('form-radio-container')) {
+            let options = el.find('input[type="radio"]');
+            let n = Math.floor(Math.random()*options.length);
+            options.eq(n).prop("checked", true);
+        }
+    })
 }

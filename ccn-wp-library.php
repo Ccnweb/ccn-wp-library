@@ -27,6 +27,9 @@ function ccnlib_scripts() {
     //wp_localize_script('ccnlib-script', 'ajaxurl', admin_url( 'admin-ajax.php' ) );
     wp_enqueue_script('ccnlib-jqueryui-easing', 'https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js', array('jquery'), '1.3', 'all');
     
+    // FontAwesome pour les icônes
+    wp_enqueue_style( 'ccnbtc-fa', 'https://use.fontawesome.com/releases/v5.5.0/css/all.css');
+
     // notification system (used to notify of POST request success or failure in HTML ajax forms)
     wp_enqueue_script('ccnlib-notifications-script', 'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js', array('jquery'), '20190105', true);
     wp_enqueue_style ('ccnlib-notifications-style', 'https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css', array(), '20190105', 'all');
@@ -63,12 +66,19 @@ function ccnlib_scripts() {
 }
 add_action( 'wp_enqueue_scripts', 'ccnlib_scripts');
 
-function ccnlib_admin_scripts() {
+function ccnlib_admin_scripts($hook) {
+    // FontAwesome pour les icônes
+    if ($hook != 'post.php' && $hook != 'post-new.php') {
+        return;
+    }
+    
+    wp_enqueue_style( 'ccnbtc-fa', 'https://use.fontawesome.com/releases/v5.5.0/css/all.css');
+    
     wp_enqueue_script('ccnlib-datepicker-script', 'https://cdnjs.cloudflare.com/ajax/libs/air-datepicker/2.2.3/js/datepicker.min.js', array(), '20190107', true);
     wp_enqueue_script('ccnlib-datepicker-lang-script', 'https://cdnjs.cloudflare.com/ajax/libs/air-datepicker/2.2.3/js/i18n/datepicker.fr.min.js', array(), '20190107', true);
     wp_enqueue_style('ccnlib-datepicker-style', 'https://cdnjs.cloudflare.com/ajax/libs/air-datepicker/2.2.3/css/datepicker.min.css', array(), '20190107', 'all');
-
-    wp_enqueue_script('ccnlib-admin-script', CCN_LIBRARY_PLUGIN_URL . '/js/admin.js', array(), '20190125', true);
+    
+    wp_enqueue_script('ccnlib-admin-script', CCN_LIBRARY_PLUGIN_URL . '/js/admin.js', array('jquery'), '20190125', true);
 }
 add_action( 'admin_enqueue_scripts', 'ccnlib_admin_scripts' );
 
