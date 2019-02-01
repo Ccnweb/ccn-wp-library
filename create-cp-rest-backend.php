@@ -202,9 +202,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
                 return array();
             }, $fields);
             $pretty_mapper = lib\array_flatten($pretty_mapper);
-            log\info('DIO SEI LA MIA VITA ALTRO IO NON HO', $pretty_mapper);
             foreach ($sanitized as $key => $val) if (gettype($val) == 'string' && isset($pretty_mapper[$val])) $sanitized[$key."__pretty"] = $pretty_mapper[$val];
-            log\info('LODATE DIO !', $sanitized);
 
             foreach ($options['send_email'] as $email_obj) {
                 // we send the email
@@ -216,6 +214,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
                             $model_args     = $email_obj['model_args'],
                             $options        = array('computed_data' => $email_obj['computed_data'])
                         );
+
                 $final_response['success'] = $send_result['success'];
                 array_push($final_response['email'], $send_result);
             }

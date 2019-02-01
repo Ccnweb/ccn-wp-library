@@ -12,7 +12,7 @@ function parseTemplateString($raw_str, $data) {
      * @param string $raw_str     The raw string containing containers like {{coco}}
      * @param string $data              The assoc. array containing the data to be inserted in $raw_str
      * 
-     * @return string                   The string $raw_str parsed with data from $data
+     * @return string                   The string $raw_str parsed with data from $data. Returns false if something went wrong
      */
 
     $parsed_str = $raw_str;
@@ -37,20 +37,25 @@ function parseTemplateString($raw_str, $data) {
             
             // we evaluate the condition string
             $condition_str = substr($match, 3);
-            foreach ($data as $key => $val) {
-                if (strpos($condition_str, '$'.$key) !== false) {
-                    if (gettype($val) == 'string') $val = '"'.$val.'"';
-                    if (!in_array(gettype($val), array('string', 'integer', 'double'))) $val = json_encode($val);
-                    $condition_str = str_replace('$'.$key, $val, $condition_str);
+            preg_match_all('/\$([A-z0-9_-]+)/i', $condition_str, $condition_matches);
+            if (count($condition_matches) > 1) {
+                foreach ($condition_matches[1] as $var_name) {
+                    $replace_val = '';
+                    if (isset($data[$var_name])) {
+                        //if (gettype($data[$var_name]) == 'string') $replace_val = '"'.$data[$var_name].'"';
+                        $replace_val = $data[$var_name];
+                        if (!in_array($replace_val, array('string', 'integer', 'double'))) $replace_val = json_encode($replace_val);
+                    }
+                    $condition_str = str_replace('$'.$var_name, $replace_val, $condition_str);
                 }
             }
             
             $condition_b = false;
             try {
-                eval('$condition_b = ('.$condition_str.');');
+                $res = eval('$condition_b = ('.$condition_str.');');
             } catch (Exception $e) {
-                log\warning('TEMPLATE_STRING_PARSE_FAILED', 'Invalid if condition in template string : '.$condition_str);
-                continue;
+                log\error('TEMPLATE_STRING_PARSE_FAILED', 'Invalid if condition in template string : '.$condition_str. ' error : '.$e->getMessage());
+                return false;
             }
 
             // we get the content in the IF condition
@@ -72,7 +77,7 @@ function parseTemplateString($raw_str, $data) {
             $tag_end = '{{/FOR}}';
             $res = get_tags($parsed_str, $tag_start, $tag_end);
             if (!$res || empty($res)) {
-                log\warning('TEMPLATE_HTML_PARSE_ERROR', 'in lib.string.php > parseTemplateString : failed to parse FOR loop '.$match);
+                //log\warning('TEMPLATE_HTML_PARSE_ERROR', 'in lib.string.php > parseTemplateString : failed to parse FOR loop "'.$match.'". parsed_str='.$parsed_str);
                 continue;
             }
             $template_str = $res[0];
@@ -81,7 +86,7 @@ function parseTemplateString($raw_str, $data) {
             preg_match('/^FOR\s+\$([^\s]+)\s+as\s+\$([^\s]+)\s=>\s\$([^\s]+)/i', $match, $iter_match);
             if (count($iter_match) < 4) {
                 log\warning('TEMPLATE_HTML_PARSE_ERROR', 'in lib.string.php > parseTemplateString : failed to parse FOR loop variables '.$match);
-                continue;
+                return false;
             }
             $iter_name = $iter_match[1];
             $key_name = $iter_match[2];
@@ -129,8 +134,8 @@ function parseTemplateString($raw_str, $data) {
                         try {
                             eval('$replace_val = '.$operation.';');
                         } catch (Exception $e) {
-                            log\warning('TEMPLATE_HTML_PARSE_INVALID_OPERATION', 'in lib.string.php > parseTemplateString : invalid operation '.$operation);
-                            continue;
+                            log\warning('TEMPLATE_HTML_PARSE_INVALID_OPERATION', 'in lib.string.php > parseTemplateString : invalid operation '.$operation. ' error '.$e->getMessage());
+                            return false;
                         }
                         $curr_str = str_replace('$('.$operation.')', $replace_val, $curr_str);
                     }
@@ -145,7 +150,7 @@ function parseTemplateString($raw_str, $data) {
             $parsed_str = str_replace($tag_start . $template_str . $tag_end, $final_str, $parsed_str);
 
         // ===================================
-        } else if (substr($match, 0, 1) != '/') {
+        } else if (substr($match, 0, 1) != '/' && substr($match, 0, 2) != 'IF' && substr($match, 0, 3) != 'FOR') {
             $parsed_str = str_replace('{{'.$match.'}}', '', $parsed_str);
         }
     }

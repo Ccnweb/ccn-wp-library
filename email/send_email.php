@@ -53,10 +53,10 @@ function send($data, $to_addresses, $subject, $model, $model_args = array(), $op
     
 
     // == 2. == avec quel sujet
-    $subject = (isset($data[$subject])) ? $data[$subject]  : 'Nouveau message de '.get_site_url() ;
+    $subject = (isset($data[$subject])) ? $data[$subject]  : $subject ;
     // si ce n'est pas un id, c'est un sujet fixe prédéfini avec éventuellement des {{...}} pour des parties dynamiques dans le sujet
     $subject = lib\parseTemplateString($subject, $data); 
-    
+
 
     // == 3. == et quel message
     // soit c'est $model elle-même le contenu du message
@@ -69,6 +69,7 @@ function send($data, $to_addresses, $subject, $model, $model_args = array(), $op
         $message = file_get_contents($html_email_models_dir . '/' . $model);
     }
 
+
     // on parse le message/modèle au cas où il contient des {{...}}
     $model_args = lib\array_map_assoc($model_args, function($key, $val) use ($data) {
         if (is_callable($val)) return lib\parseTemplateString($val($data), $data);
@@ -76,7 +77,7 @@ function send($data, $to_addresses, $subject, $model, $model_args = array(), $op
         else return log\warning('INVALID_EMAIL_MODEL_ARGUMENT', 'In send_email.php > send : invalid model_arg value for $key='.json_encode($key).' Value for this key is neither a function nor a string, it is a '.gettype($val), '');
     });
     $model_args = lib\assign_default($model_args, $data);
-    $message = lib\parseTemplateString($message, $model_args);
+    $message = lib\parseTemplateString($message, $model_args); // TODO use Twig or a good php templating system instead of a custom one
 
 
     // == 4. == envoi du mail...
