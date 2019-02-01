@@ -37,6 +37,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
     $html_email_models_dir = CCN_LIBRARY_PLUGIN_DIR . '/email_models'; // TODO delete this (moved in send_email.php)
 
     $default_options = array(
+        'post_status' => 'private', // any valid post_status is ok but useful values are 'publish' to make the post available to any one and 'private' to make it hidden (for example for subscriptions)
         'send_email' => array(), // (no email sent by default) array of arrays with elements like array('addresses' => array('coco@example.com'), 'subject' => 'id_of_subject_field', 'model' => 'path_to_html_email_model', 'model_args' => array('title' => 'Merci de nous contacter'))
         'send_to_user' => '', // if the email should be sent to the email address of the user, write here the id of the user email field
         'create_post' => true, // créer ou non un nouveau post de type $cp_id (normalement c'est oui, sauf pour les formulaire de contact par ex)
@@ -160,7 +161,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
                     'meta_input' => $sanitized
                 );
                 $args['post_title'] = (isset($sanitized['post_title'])) ? $sanitized['post_title'] : 'undefined';
-                $args['post_status'] = (isset($sanitized['post_status']) && $validation->isValidPostStatus($sanitized['post_status'])['valid']) ? $sanitized['post_status'] : 'publish';
+                $args['post_status'] = (isset($sanitized['post_status']) && $validation->isValidPostStatus($sanitized['post_status'])['valid']) ? $sanitized['post_status'] : $options['post_status'];
                 $res = 0;
                 try {
                     $res = wp_insert_post($args);
@@ -193,18 +194,19 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
             // == 4. == on envoie un email
             $final_response['email'] = array();
 
-            foreach ($options['send_email'] as $email_obj) {
-                // we add additional {...}_pretty attribtues to $sanitized for dropdown and radio elements
-                $pretty_mapper = array_map(function($f) {
-                    if (($f['type'] == 'radio' || $f['type'] == 'dropdown') && isset($f['options'])) {
-                        return $f['options'];
-                    }
-                    return array();
-                }, $fields);
-                $pretty_mapper = lib\array_flatten($pretty_mapper);
-                foreach ($sanitized as $key => $val) if (gettype($val) == 'string' && isset($pretty_mapper[$val])) $sanitized[$key."__pretty"] = $pretty_mapper[$val];
-                log\info('LODATE DIO !', $sanitized);
+            // we add additional {...}__pretty attribtues to $sanitized for dropdown and radio elements
+            $pretty_mapper = array_map(function($f) {
+                if (($f['type'] == 'radio' || $f['type'] == 'dropdown') && isset($f['options'])) {
+                    return $f['options'];
+                }
+                return array();
+            }, $fields);
+            $pretty_mapper = lib\array_flatten($pretty_mapper);
+            log\info('DIO SEI LA MIA VITA ALTRO IO NON HO', $pretty_mapper);
+            foreach ($sanitized as $key => $val) if (gettype($val) == 'string' && isset($pretty_mapper[$val])) $sanitized[$key."__pretty"] = $pretty_mapper[$val];
+            log\info('LODATE DIO !', $sanitized);
 
+            foreach ($options['send_email'] as $email_obj) {
                 // we send the email
                 $send_result = email\send( 
                             $data           = $sanitized, 

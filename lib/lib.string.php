@@ -23,21 +23,27 @@ function parseTemplateString($raw_str, $data) {
 
         // ===================================
         // case of a simple {{...}} to be replaced
+        // ===================================
         if (isset($data[$match])) {
             if (gettype($data[$match]) == 'array') $data[$match] = '['.implode(', ', $data[$match]).']';
             $parsed_str = str_replace('{{'.$match.'}}', $data[$match], $parsed_str);
 
         // ===================================
         // case of a conditional tag {{IF ...}} ... {{/IF}}
+        // ===================================
         } else if (substr($match, 0, 2) == 'IF') {
             $tag_start = '{{'.$match.'}}';
             $tag_end = '{{/IF}}';
             
             // we evaluate the condition string
             $condition_str = substr($match, 3);
-            foreach ($data as $key => $val) 
-                if (strpos($condition_str, '$'.$key) !== false) 
+            foreach ($data as $key => $val) {
+                if (strpos($condition_str, '$'.$key) !== false) {
+                    if (gettype($val) == 'string') $val = '"'.$val.'"';
+                    if (!in_array(gettype($val), array('string', 'integer', 'double'))) $val = json_encode($val);
                     $condition_str = str_replace('$'.$key, $val, $condition_str);
+                }
+            }
             
             $condition_b = false;
             try {
@@ -56,19 +62,20 @@ function parseTemplateString($raw_str, $data) {
             else foreach ($res as $el) $parsed_str = str_replace($tag_start.$el.$tag_end, '', $parsed_str);
 
         // ===================================
-        // case of a for loop {{FOR $arr as $key => $value}} ... {{/FOR}}
+        // case of a for loop 
+        // {{FOR $arr as $key => $value}} ... {{/FOR}}
+        // ===================================
         } else if (substr($match, 0, 3) == 'FOR') {
 
             // we get the content in the FOR condition
             $tag_start = '{{'.$match.'}}';
             $tag_end = '{{/FOR}}';
             $res = get_tags($parsed_str, $tag_start, $tag_end);
-            if (!$res ||empty($res)) {
+            if (!$res || empty($res)) {
                 log\warning('TEMPLATE_HTML_PARSE_ERROR', 'in lib.string.php > parseTemplateString : failed to parse FOR loop '.$match);
                 continue;
             }
             $template_str = $res[0];
-            echo "template_str=".$template_str."\n";
 
             // we parse the FOR loop variables, e.g. "FOR $children as $key => $value" --> ['children', 'key', 'value']
             preg_match('/^FOR\s+\$([^\s]+)\s+as\s+\$([^\s]+)\s=>\s\$([^\s]+)/i', $match, $iter_match);
@@ -79,7 +86,6 @@ function parseTemplateString($raw_str, $data) {
             $iter_name = $iter_match[1];
             $key_name = $iter_match[2];
             $val_name = $iter_match[3];
-            echo "FOR variables=".json_encode($iter_match)."\n";
 
             // we parse the iterated element in $data
             if (!isset($data[$iter_name])) {
@@ -87,7 +93,12 @@ function parseTemplateString($raw_str, $data) {
                 continue;
             }
             $iter_element = $data[$iter_name];
-            echo "iter_element=".json_encode($iter_element)."\n";
+            // if it's JSON array disguised in string, we parse it
+            if (gettype($iter_element) == 'string') $iter_element = json_decode($iter_element, true);
+            if (!$iter_element) {
+                log\warning('TEMPLATE_HTML_PARSE_ERROR', 'in lib.string.php > parseTemplateString : the data to be iterated in for loop is not iterable : type='.gettype($iter_element).', data='.json_encode($data));
+                continue;
+            }
 
             // for each element in $iter_element, we parse the template string
             $final_str = '';
@@ -102,6 +113,7 @@ function parseTemplateString($raw_str, $data) {
                         // special case where we have an attribute = $key_name
                         if ($val_matches[1][$k] == $key_name) $val_matches[1][$k] = $i;
                         $replace_val = (isset($myobj[$val_matches[1][$k]])) ? $myobj[$val_matches[1][$k]] : '';
+                        if (!in_array(gettype($replace_val), array('string', 'integer', 'double'))) $replace_val = json_encode($replace_val);
                         $curr_str = str_replace($val_matches[0][$k], $replace_val, $curr_str);
                     }
                 }

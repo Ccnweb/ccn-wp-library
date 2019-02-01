@@ -149,6 +149,12 @@ function get_field_ids($field, $html = false) {
         $res = call_user_func('\ccn\lib\html_fields\get_field_ids_'.$field['type'], $field, $html);
         if ($res === false) log\error('HTML_FIELD_RETRIEVE_IDS_FAILED', 'Failed to retrieve field meta key ids for field with id='.$field['id'].' of type '.$field['type']);
         else return $res;
+    } else if (isset($field['html_label']) && is_array($field['html_label'])) {
+        $ids = array();
+        foreach ($field['html_label'] as $key => $val) {
+            $ids[] = $field['id'].'_'.$key;
+        }
+        return $ids;
     } else {
         /* if (!$html) return [$field['id']];
         return [$field['id'].'_field']; */
@@ -167,6 +173,8 @@ function get_field_names($field) {
         $res = call_user_func('\ccn\lib\html_fields\get_field_names_'.$field['type'], $field);
         if ($res === false) log\error('HTML_FIELD_RETRIEVE_NAMES_FAILED', 'Failed to retrieve field names for field with id='.$field['id'].' of type '.$field['type']);
         else return $res;
+    } else if (isset($field['html_label']) && is_array($field['html_label'])) {
+        return array_keys($field['html_label']);
     } else {
         return '';
     }

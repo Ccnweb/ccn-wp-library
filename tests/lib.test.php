@@ -21,8 +21,8 @@ $res = lib\parseTemplateString($sujet, $data);
 
 function test_parseTemplateString() {
     $sujet = 'Louez {{dieu}} vous {{qui}} 
-        {{IF "$truc_bidule" == "machin"}}. OUI !{{/IF}} 
-        {{IF "$truc_bidule" != "machin"}}. Bien sûr !{{/IF}}
+        {{IF $truc_bidule == "machin"}}. OUI !{{/IF}} 
+        {{IF $truc_bidule != "machin"}}. Bien sûr !{{/IF}}
         {{FOR $children as $k => $v}}
             <div>$k. $($k+1) $v.prenom $v.nom -- $($v.age + 1) ans</div>
         {{/FOR}}';

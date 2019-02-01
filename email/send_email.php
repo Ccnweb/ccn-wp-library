@@ -40,6 +40,7 @@ function send($data, $to_addresses, $subject, $model, $model_args = array(), $op
     for ($i = 0; $i < count($to_addresses); $i++) {
         $curr_email = filter_var($to_addresses[$i], FILTER_VALIDATE_EMAIL);
         if ($curr_email === false && isset($data[$to_addresses[$i]])) { 
+            if ($data[$to_addresses[$i]] == '__IGNORE__') continue; // /!\ this is very specific behavior !!! It means that when the email address = '__IGNORE__', it skips without logging anything
             $curr_email = filter_var($data[$to_addresses[$i]], FILTER_VALIDATE_EMAIL);
             if ($curr_email === false) log\warning('INVALID_EMAIL_ADDRESS', $data[$to_addresses[$i]]);
             else array_push($to, $curr_email );

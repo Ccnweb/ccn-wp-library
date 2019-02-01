@@ -223,17 +223,33 @@ function extract_fields($arr, $fields) {
     return $new_arr;
 }
 
-function array_flatten($arr) {
+function array_flatten($arr, $preserve_path = false, $options = array()) {
     /**
      * Flattens completely an array of arrays
+     * 
+     * examples :
+     * [1, [2, 3], [4,5,6], 123]            , false --> [1,2,3,4,5,6,123]
+     * ['a':1, 'b':[1, 2, 'c':3], 'd':4]    , false --> {"a":1, "0":1, "1":2, "c":3, "d":4}
+     * ['a':1, 'b':[1, 2, 'c':3], 'd':4]    , true  --> {"a":1, "b.0":1, "b.1":2, "b.c":3, "d":4}
      */
+	
+	$default_options = [
+		'prefix' => '',
+		'path_separator' => '.',
+	];
+	$options = array_merge($default_options, $options);
 
     $new_arr = array();
-    foreach ($arr as $el) {
+    foreach ($arr as $k => $el) {
         if (gettype($el) == 'array') {
-            $new_arr = array_merge($new_arr, array_flatten($el));
+			$new_options = $options;
+			if ($preserve_path) {
+				$new_options['prefix'] .= $k.$options['path_separator'];
+			}
+            $new_arr = array_merge($new_arr, array_flatten($el, $preserve_path, $new_options));
         } else {
-            array_push($new_arr, $el);
+			if (gettype($k) == 'string' || $options['prefix'] != '') $new_arr[$options['prefix'].$k] = $el;
+			else $new_arr[] = $el;
         }
     }
     return $new_arr;
