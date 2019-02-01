@@ -20,11 +20,20 @@ $res = lib\parseTemplateString($sujet, $data);
 //echo $res."\n\n";
 
 function test_parseTemplateString() {
-    $sujet = 'Louez {{dieu}} vous {{qui}} {{IF "$truc_bidule" == "machin"}}. OUI !{{/IF}} {{IF "$truc_bidule" != "machin"}}. Bien sûr !{{/IF}}';
+    $sujet = 'Louez {{dieu}} vous {{qui}} 
+        {{IF "$truc_bidule" == "machin"}}. OUI !{{/IF}} 
+        {{IF "$truc_bidule" != "machin"}}. Bien sûr !{{/IF}}
+        {{FOR $children as $k => $v}}
+            <div>$k. $($k+1) $v.prenom $v.nom -- $($v.age + 1) ans</div>
+        {{/FOR}}';
     $data = array(
         'dieu' => 'le Seigneur Dieu de l\'univers',
         'qui' => 'tous rassemblés',
         'truc_bidule' => 'machin',
+        'children' => [
+            ['prenom' => 'Carlo', 'nom' => 'Baugé', 'age' => 4],
+            ['prenom' => 'Enrica', 'nom' => 'Baugé', 'age' => 25],
+        ],
     );
     $res = lib\parseTemplateString($sujet, $data);
     print_out($res);
