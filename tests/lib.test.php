@@ -38,7 +38,7 @@ function test_parseTemplateString() {
     $res = lib\parseTemplateString($sujet, $data);
     print_out($res);
 }
-test_parseTemplateString();
+//test_parseTemplateString();
 
 // ============================================
 //  TEST get_tags
@@ -49,7 +49,7 @@ function test_get_tags() {
     $res = lib\get_tags($str, '{{coco}}', '{{riri}}');
     print_out($res);
 }
-test_get_tags();
+//test_get_tags();
 
 // ============================================
 //  TEST array_swap_chaussette
@@ -130,5 +130,51 @@ function test_build_html() {
 }
 //test_build_html();
 
+// ============================================
+// TEST lib\get_callable_name
+// ============================================
+
+function riri($a) {return $a+3;}
+
+function test_get_callable_name() {
+    $res = array();
+    $coco = function($a) {return $a+1;};
+    function truc($a) {return $a;};
+    $res[] = lib\get_callable_name('coco');
+    $res[] = lib\get_callable_name($coco);
+    $res[] = lib\get_callable_name('in_array');
+    $res[] = lib\get_callable_name('undefined_function');
+    $res[] = lib\get_callable_name('riri');
+    $res[] = lib\get_callable_name('truc');
+    $res[] = lib\get_callable_name(function() {return $a+1;});
+    print_out($res);
+}
+//test_get_callable_name();
+
+
+// ============================================
+// TEST lib\eval_condition
+// ============================================
+
+function test_eval_condition() {
+    $condition = "'on_site' == 'on_site'";
+    $res = array();
+    $res[] = lib\eval_condition($condition);
+    print_out($res);
+}
+test_eval_condition();
+
+// ============================================
+// TEST lib\eval_operation
+// ============================================
+
+function test_eval_operation() {
+    $operation = '1+1';
+    $res = array();
+    $res[] = lib\eval_operation($operation);
+    $res[] = lib\eval_operation('"lodate"." "."Dio !"');
+    print_out($res);
+}
+//test_eval_operation();
 
 ?>

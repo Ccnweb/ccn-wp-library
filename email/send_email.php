@@ -74,11 +74,14 @@ function send($data, $to_addresses, $subject, $model, $model_args = array(), $op
     $model_args = lib\array_map_assoc($model_args, function($key, $val) use ($data) {
         if (is_callable($val)) return lib\parseTemplateString($val($data), $data);
         else if (gettype($val) == 'string') return lib\parseTemplateString($val, $data);
-        else return log\warning('INVALID_EMAIL_MODEL_ARGUMENT', 'In send_email.php > send : invalid model_arg value for $key='.json_encode($key).' Value for this key is neither a function nor a string, it is a '.gettype($val), '');
+        else return log\warning('INVALID_EMAIL_MODEL_ARGUMENT', 'In '.basename(__FILE__).' > send : invalid model_arg value for $key='.json_encode($key).' Value for this key is neither a function nor a string, it is a '.gettype($val), '');
     });
     $model_args = lib\assign_default($model_args, $data);
     $message = lib\parseTemplateString($message, $model_args); // TODO use Twig or a good php templating system instead of a custom one
-
+    if ($message === false) {
+        log\error('FAILED_TO_PARSE_EMAIL', 'failed to parse email template');
+        return ['success' => false, 'errno' => 'FAILED_TO_PARSE_EMAIL', 'descr' => 'I failed to parse the email template with data, sorry'];
+    }
 
     // == 4. == envoi du mail...
     $sent_successfully = false;

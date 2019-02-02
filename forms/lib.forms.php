@@ -114,9 +114,9 @@ function extract_field_post_data($field, $post_data) {
 
     // cas des fields repeat
     if ($field['type'] == 'REPEAT-GROUP') {
-        if (!isset($post_data[$field['id']])) return log\error('INVALID_FIELD_STRUCTURE', 'lib.forms.php > In extract_post_data', false);
+        if (!isset($post_data[$field['id']])) return log\error('INVALID_FIELD_STRUCTURE', 'In '.basename(__FILE__).' > extract_post_data', false);
         $group_data = json_decode($post_data[$field['id']], true);
-        if (!is_array($group_data)) return log\error('INVALID_POST_DATA', 'lib.forms.php > extract_post_data for repeat-field with id='.$field['id'], false);
+        if (!is_array($group_data)) return log\error('INVALID_POST_DATA', 'In '.basename(__FILE__).' > extract_post_data for repeat-field with id='.$field['id'], false);
 
         return $group_data;
     } 
