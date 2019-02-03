@@ -162,7 +162,7 @@ function test_eval_condition() {
     $res[] = lib\eval_condition($condition);
     print_out($res);
 }
-test_eval_condition();
+//test_eval_condition();
 
 // ============================================
 // TEST lib\eval_operation
@@ -177,4 +177,36 @@ function test_eval_operation() {
 }
 //test_eval_operation();
 
+// ============================================
+// TEST lib\get_max_prefix
+// ============================================
+
+function test_get_max_prefix() {
+    $arr = ['coco_sldkfj', 'coco_sldkpoizpeor', 'coco_sdf', 'coco_sdfgh', 'coco_truc'];
+    print_out(lib\get_max_prefix($arr));
+}
+//test_get_max_prefix();
+
+
+// ============================================
+// TEST lib\getif
+// ============================================
+
+function test_getif() {
+    $arr = [
+        'un' => ['deux' => ['trois' => 4], 'six' => 7],
+        'coco' => 4,
+        'deux' => ['cinq' => 6, 'six' => 9],
+    ];
+    $res = [];
+    $res[] = lib\getif($arr, 'un/deux/trois');
+    $res[] = lib\getif($arr, 'un/deux/six');
+    $res[] = lib\getif($arr, 'un/six/six');
+    $res[] = lib\getif($arr, '');
+    $res[] = lib\getif($arr, 'un');
+    $res[] = lib\getif($arr, 'un/deux');
+    $res[] = lib\getif($arr, 'deux/six/');
+    print_out($res);
+}
+test_getif();
 ?>

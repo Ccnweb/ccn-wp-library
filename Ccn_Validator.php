@@ -44,7 +44,7 @@ class Ccn_Validator {
         
         // we verify that the email address domain is valid
         $domain = explode("@",$str)[1];
-        if (in_array($domain, self::$bannedEmailDomains)) return array('valid' => false, 'reason' => 'INVALID_DOMAIN', 'descr' => 'The email address domain is banned');
+        if (in_array($domain, self::$bannedEmailDomains)) return array('valid' => false, 'reason' => 'INVALID_DOMAIN', 'descr' => 'The email address domain "'.$domain.'" is banned');
 
         return array('valid' => true);
     }

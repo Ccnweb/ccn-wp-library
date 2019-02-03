@@ -122,6 +122,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
             }
         }
 
+
         //log\info('sanitized', $sanitized); // uncomment this to log the $sanitized $_POST values sent by the client
         
         if (post_type_exists($cp_id)) {
@@ -134,10 +135,10 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
             $liste_cposts_customfields = array_map(function($post) {return get_post_meta($post->ID, '', true);}, $liste_cposts);
             
             // == 2.a == we check that unique fields are indeed unique
+            // TODO frst filter $posts where isset($post[$f['id]])
             foreach($fields as $f) {
-                // TODO filter first $posts where isset($post[$f['id]])
-                $customfields_vals = array_map(function($post) use ($f) {return $post[$f['id']][0];}, $liste_cposts_customfields);
                 if (isset($f['unique']) && $f['unique']) {
+                    $customfields_vals = array_map(function($post) use ($f) {return $post[$f['id']][0];}, $liste_cposts_customfields);
                     if (in_array($sanitized[$f['id']], $customfields_vals)) {
                         log\error('DUPLICATE_POST_KEY', 'In '.$log_stack_location.' Une ressource avec l\'attribut '.$f['id'].'='.$sanitized[$f['id']].' existe déjà');
                         echo json_encode(array('success' => false, 'errno' => 'DUPLICATE_POST_KEY', 'descr' => 'Une ressource avec l\'attribut '.$f['id'].'='.$sanitized[$f['id']].' existe déjà'));
@@ -153,7 +154,9 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
                     // we try to execute the custom validation function
                     $res = false;
                     try {
-                        $res = $custom_validation_fun($fields, $sanitized, $existing_posts);
+                        log\info('I WAS HERE', $fun_name);
+                        $res = $custom_validation_fun($fields, $sanitized, $liste_cposts_customfields);
+                        log\info('ok');
                     } catch (Exception $e) {
                         log\error('CUSTOM_VALIDATION_FUNCTION_FAILED', 'In '.$log_stack_location.' for custom_validation_function "'.$fun_name.'"');
                         echo json_encode(array('success' => false, 'errno' => 'CUSTOM_VALIDATION_FUNCTION_FAILED', 'descr' => 'custom_validation_function failed name='.$fun_name));
@@ -173,6 +176,14 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
 
             // == 3. == on crée un post
             if (options['create_post']) {
+
+                // we compute the reference id
+                $ref_field = lib\array_find_by_key($liste_cposts_customfields, 'type', 'reference');
+                if ($ref_field === false) {
+                    log\error('MISSING_REFERENCE_FIELD', 'In '.$log_stack_location.'');
+                } else {
+                    $sanitized[$field['id']] = fields\create_new_reference($cp_id, $liste_cposts_customfields);
+                }
 				
                 // we execute all the on_before_save_post functions
                 if (!empty($options['on_before_save_post'])) {

@@ -50,6 +50,7 @@ function send($data, $to_addresses, $subject, $model, $model_args = array(), $op
             log\warning('INVALID_EMAIL_ADDRESS', 'Invalid email address : '.$to_addresses[$i]);
         }
     }
+    $to = array_unique($to);
     
 
     // == 2. == avec quel sujet

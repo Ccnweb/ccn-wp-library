@@ -183,4 +183,43 @@ function get_tags($str, $tag_start, $tag_end) {
 }
 
 
+// =======================================================================
+//              LOW-LEVEL STRING MANIPULATION
+// =======================================================================
+
+function get_max_prefix($arr_str) {
+    /**
+     * Returns the longest prefix of strings in an array of strings
+     * example :
+     * $arr_str = ['coco_sdf', 'coco_azeatreituort', 'coco_sdfflgkh']
+     * RETURNS --> 'coco_'
+     * 
+     * @param array<string> $arr_str
+     * 
+     */
+
+    if (count($arr_str) < 1) return '';
+    $prefix = '';
+    foreach ($arr_str as $str) {
+        if ($prefix == '') $prefix = $str;
+        else $prefix = string_common_prefix($prefix, $str);
+    }
+    return $prefix;
+}
+
+function string_common_prefix($str1, $str2) {
+    /**
+     * Returns the common prefix between strings $str1 and $str2
+     */
+
+    $n = min(strlen($str1), strlen($str2));
+    $common_prefix = '';
+    for ($i = 0; $i < $n; $i++) {
+        if ($str1[$i] != $str2[$i]) return $common_prefix;
+        $common_prefix .= $str1[$i];
+    }
+    return $common_prefix;
+}
+
+
 ?>

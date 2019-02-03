@@ -135,6 +135,31 @@ function extract_field_post_data($field, $post_data) {
 //              BASIC FIELDS FUNCTIONS
 // =======================================================================
 
+function is_showable_in($field, $display_type) {
+    /**
+     * tells if we should render the $field in this $display_type
+     * $display_type can be equal to :
+     * - 'admin_edit'   the admin form when editing a post
+     * - 'front_create' the form in the frontend when a user creates a post (e.g. a subscription form, ...)
+     */
+
+    if (!isset($field['type'])) log\error('INVALID_FIELD_STRUCTURE', 'In '.basename(__FILE__).' > is_showable_in, $field does not have a "type" attribute, field='.json_encode($field));
+    if ($display_type == 'front_create' && $field['type'] == 'reference') return false;
+    return true;
+}
+
+function create_new_reference($cp_id, $old_posts) {
+    /**
+     * creates a new reference string for a new post of type $cp_id
+     * @param array $old_posts      list of all the old posts of type $cp_id
+     * 
+     * 
+     */
+
+    return strtoupper($cp_id).'_'.date('Ymd_Hi').'_'.count($old_posts);
+}
+
+
 function get_field_ids($field, $html = false) {
     /**
      * Fait appel aux fonctions de type get_field_ids_{nom_du_field} qui sont stockées dans le dossier html_fields/
@@ -226,6 +251,25 @@ function prepare_fields($fields) {
         }
         if (field_structure_is_valid($field)) array_push($new_fields, $field);
     
+    }
+
+    // we add a field with type "ID" if it does not exist already
+    if (lib\array_find_by_key($fields, 'type', 'reference') === false) {
+        $guessed_prefix = lib\get_max_prefix(lib\array_map_attr($fields, 'id'));
+        if ($guessed_prefix == '') $guessed_prefix = 'ccnlib_';
+        $ref_id = $guessed_prefix.'_reference';
+
+        $i=0;
+        while ($i < 100 && lib\array_find_by_key($fields, 'id', $ref_id) !== false) {
+            $ref_id = $guessed_prefix.'_reference_'.$i;
+            $i++;
+        }
+
+        $field_id = [
+            'id' => $ref_id,
+            'type' => 'reference',
+        ];
+        $new_fields[] = $field_id;
     }
     
     return $new_fields;

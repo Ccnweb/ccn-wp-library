@@ -158,7 +158,7 @@ function create_custom_post_metabox($cp_name, $metabox, $prefix, $all_fields) {
 
                         <div class="metabox_field_container">
                             <!-- <label for="<?php echo $field['id']; ?>_field"><?php echo $label; ?></label> -->
-                            <?php echo create_HTML_field($field, $curr_options); ?>
+                            <?php if (fields\is_showable_in($field, 'admin_edit')) echo create_HTML_field($field, $curr_options); ?>
                         </div>
 
                 <?php } endforeach; ?>
@@ -294,6 +294,7 @@ function create_custom_post_savecbk($cp_name, $fields) {
 // 4. Adds some fields as columns in the "list" view in admin panel
 // source : https://catapultthemes.com/add-acf-fields-to-admin-columns/
 function create_custom_post_column_fields($cp_name, $fields) {
+
     // A. We first add the columns in the interface
     $fields_as_columns = array();
     foreach ($fields as $f) {

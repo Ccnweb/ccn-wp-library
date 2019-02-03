@@ -7,6 +7,41 @@ require_once(CCN_LIBRARY_PLUGIN_DIR . '/log.php'); use \ccn\lib\log as log;
 /*     LOW-LEVEL USEFUL FUNCTIONS       */
 /* ==================================== */
 
+function getif($arr, string $path, $false_return_value = '', $sep = '/') {
+    /**
+     * gets the element in $arr that can be found from a "path" of attributes
+     * returns $false_return_value if no such element can be found
+     * 
+     * @param string $sep   the delimiter that separates elements in $path
+     * 
+     * e.g.
+     * $arr = ['a': ['coco':2, 'riri':['gio':3, 'c':4]], 'b':2]
+     * $path = 'a/riri/gio'
+     * RETURNS --> $arr['a']['riri']['gio']
+     * 
+     */
+
+    // we eliminate delimiters in first or last position in the path string
+    if (substr($path, 0, 1) == $sep) $path = substr($path, 1);
+    if (substr($path, -1) == $sep) $path = substr($path, 0, -1);
+
+    // we treat simple cases where $path is an attribute...
+    if (isset($arr[$path])) return $arr[$path];
+    // ... or if $path is not an attribute of $arr and has no delimiter
+    if (strpos($path, $sep) === false) return $false_return_value;
+
+    // if $path has delimiters, we take the first part of path
+    $arr_path = explode($sep, $path);
+    $first = $arr_path[0];
+    // if this first part is an attribute of arr we take the corresponding element...
+    if (isset($arr[$first])) {
+        $path_rest = implode($sep, array_slice($arr_path, 1));
+        // ...and we do the same with rest of the element
+        return getif($arr[$first], $path_rest, $false_return_value, $sep);
+    }
+    return $false_return_value;
+}
+
 function array_swap_chaussette($arr) {
     /**
      * retourne un array comme une chaussette
@@ -106,7 +141,7 @@ function array_map_attr($arr, $attr) {
 
 function array_add_field($arr, $attr, $fun) {
     /**
-     * Adds a new attribute to all elements ($key => $el) of $arr 
+     * Adds a new attribute $attr to all elements ($key => $el) of $arr 
      * where $el[$attr] = $fun($key, $el, $arr)
      */
 
@@ -212,8 +247,16 @@ function assign_default($el1, $el2) { // TODO replace all calls to this by array
     return $el1;
 }
 
-// extracts the fields in $fields from the assoc array $arr
+
 function extract_fields($arr, $fields) {
+    /**
+     * extracts the fields in $fields from the assoc array $arr
+     * example :
+     * $arr = ['a':1, 'b':2, 'c':3]
+     * $fields = ['a', 'c']
+     * RETURNS --> ['a':1, 'c':3]
+     */
+
     $new_arr = array();
     foreach ($fields as $field) {
         if (gettype($field) == 'string') {
