@@ -2,10 +2,10 @@ jQuery(document).ready(function($) {
 
     // on initialise les tooltips bootstrap
     // source : https://getbootstrap.com/docs/4.1/components/tooltips/
-    $('[data-toggle="tooltip"]').tooltip();
+    if ($('[data-toggle="tooltip"]').length) $('[data-toggle="tooltip"]').tooltip();
 
     // on itinialise les datepickers dans les formulaires
-    $('.datepicker-here').datepicker();
+    if ($('.datepicker-here').length) $('.datepicker-here').datepicker();
 
     // load validity check of my fields
     $('.ccnlib_post').each(function() {
