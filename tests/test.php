@@ -1,5 +1,7 @@
 <?php
 
+if (!defined('CCN_LIBRARY_PLUGIN_DIR')) define('CCN_LIBRARY_PLUGIN_DIR', realpath('..'));
+
 require_once(CCN_LIBRARY_PLUGIN_DIR . '/forms/lib.forms.php');
 use \ccn\lib\html_fields as fields;
 

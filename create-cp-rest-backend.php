@@ -154,9 +154,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
                     // we try to execute the custom validation function
                     $res = false;
                     try {
-                        log\info('I WAS HERE', $fun_name);
                         $res = $custom_validation_fun($fields, $sanitized, $liste_cposts_customfields);
-                        log\info('ok');
                     } catch (Exception $e) {
                         log\error('CUSTOM_VALIDATION_FUNCTION_FAILED', 'In '.$log_stack_location.' for custom_validation_function "'.$fun_name.'"');
                         echo json_encode(array('success' => false, 'errno' => 'CUSTOM_VALIDATION_FUNCTION_FAILED', 'descr' => 'custom_validation_function failed name='.$fun_name));
@@ -178,12 +176,21 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
             if (options['create_post']) {
 
                 // we compute the reference id
-                $ref_field = lib\array_find_by_key($liste_cposts_customfields, 'type', 'reference');
+                $ref_field = lib\array_find_by_key($fields, 'type', 'reference');
                 if ($ref_field === false) {
                     log\error('MISSING_REFERENCE_FIELD', 'In '.$log_stack_location.'');
                 } else {
-                    $sanitized[$field['id']] = fields\create_new_reference($cp_id, $liste_cposts_customfields);
+                    $new_reference = fields\create_new_reference($cp_id, $liste_cposts_customfields, $ref_field['id']); 
+                    
+                    if ($new_reference === false) {
+                        log\error('REFERENCE_STRING_GEN_FAILED', 'In '.$log_stack_location.' cp_id='.$cp_id.' ref_id_key='.$ref_field['id']);
+                        echo json_encode(['success' => false, 'errno' => 'REFERENCE_STRING_GEN_FAILED', 'descr' => 'Impossible to generate a reference for this custom post type '.$cp_id]);
+                        die();
+                    }                   
+                    $sanitized[$ref_field['id']] = $new_reference;
                 }
+
+                log\info('reference created');
 				
                 // we execute all the on_before_save_post functions
                 if (!empty($options['on_before_save_post'])) {
@@ -197,6 +204,8 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
                             $final_response['on_before_save_post'][] = $res;
                             if (!isset($res) || !isset($res['success']) || $res['success'] !== true) {
                                 $final_response['success'] = false;
+                                if (isset($res['errno'])) $final_reponse['errno'] = $res['errno'];
+								if (isset($res['descr'])) $final_reponse['descr'] = $res['descr'];
                                 echo json_encode($final_response);
                                 die();
                             }
@@ -212,6 +221,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
                 $args['post_title'] = (isset($sanitized['post_title'])) ? $sanitized['post_title'] : 'undefined';
                 $args['post_status'] = (isset($sanitized['post_status']) && $validation->isValidPostStatus($sanitized['post_status'])['valid']) ? $sanitized['post_status'] : $options['post_status'];
                 $res = 0;
+                //log\info('POST ARGS', $args);
                 try {
                     $res = wp_insert_post($args);
                 } catch(Exception $e) {
@@ -232,7 +242,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
                     $final_response = array_merge($final_response, array('success' => true, 'id' => $res, 'create_post' => true, 'email' => false));
                 }
             }
-        } else {
+        } else if (isset($options['create_post']) && $options['create_post']) {
             log\error('UNKNOWN_POST_TYPE', 'in '.$log_stack_location.' : post type '.$cp_id.' does not exist');
             $final_reponse = array_merge($final_reponse, array('success' => false, 'errno' => 'UNKNOWN_POST_TYPE', 'descr' => 'post type '.$cp_id.' does not exist'));
             echo json_encode($final_response); die();
@@ -243,7 +253,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
             // == 4. == on envoie un email
             $final_response['email'] = array();
 
-            // we add additional {...}__pretty attribtues to $sanitized for dropdown and radio elements
+            // we add additional {...}__pretty attributes to $sanitized for dropdown and radio elements
             $pretty_mapper = array_map(function($f) {
                 if (($f['type'] == 'radio' || $f['type'] == 'dropdown') && isset($f['options'])) {
                     return $f['options'];

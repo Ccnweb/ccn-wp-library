@@ -148,15 +148,32 @@ function is_showable_in($field, $display_type) {
     return true;
 }
 
-function create_new_reference($cp_id, $old_posts) {
+function create_new_reference($cp_id, $old_posts, $old_posts_reference_attr) {
     /**
      * creates a new reference string for a new post of type $cp_id
      * @param array $old_posts      list of all the old posts of type $cp_id
+     * @param string $old_posts_reference_attr  the name of the key that holds the reference
      * 
      * 
      */
 
-    return strtoupper($cp_id).'_'.date('Ymd_Hi').'_'.count($old_posts);
+    $positive_adjectives = ['adorable', 'amazing', 'amusing', 'authentic', 'awesome', 'beautiful', 'beloved', 'blessed', 'brave', 'brilliant', 'calm', 'caring', 'charismatic', 'cheerful', 'charming', 'compassionate', 'creative', 'cute', 'diligent', 'diplomatic', 'dynamic', 'enchanted', 'enlightened', 'enthusiastic', 'fabulous', 'faithful', 'fearless', 'forgiving', 'friendly', 'funny', 'generous', 'genuine', 'graceful', 'gracious', 'happy', 'honest', 'incredible', 'inspired', 'intelligent', 'jovial', 'kind', 'lively', 'loyal', 'lucky', 'mindful', 'miraculous', 'nice', 'noble', 'original', 'peaceful', 'positive', 'precious', 'relaxed', 'sensitive', 'smart', 'splendid', 'strong', 'successful', 'tranquil', 'trusting', 'vivacious', 'wise', 'zestful'];
+    $names = ['fractal', 'narval', 'lynx', 'unicorn', 'magnolia', 'hibiscus', 'almondtree', 'lion', 'tiger', 'eagle', 'falcon', 'mustang', 'gibbon', 'koala', 'firefox', 'meerkat', 'ibex', 'whale', 'bear', 'heron', 'quetzal', 'salamander', 'ringtail', 'ocelot', 'pangolin', 'yak', 'beaver'];
+    
+    $random_name = strtoupper($positive_adjectives[array_rand($positive_adjectives)].'_'.$names[array_rand($names)]);
+    $new_ref_base = strtoupper($cp_id).'_'.date('Ymd_Hi').'_';
+    $new_ref = $new_ref_base.$random_name;
+    
+    $i = 0;
+    $maxi = 1000;
+    while ($i < $maxi && lib\array_find_by_key($old_posts, $old_posts_reference_attr, $new_ref) !== false) {
+        $random_name = $positive_adjectives[array_rand($positive_adjectives)].'_'.$names[array_rand($names)];
+        $new_ref = $new_ref_base.$random_name;
+        $i++;
+    }
+    
+    if ($i >= $maxi) return false;
+    return $new_ref;
 }
 
 
@@ -253,7 +270,7 @@ function prepare_fields($fields) {
     
     }
 
-    // we add a field with type "ID" if it does not exist already
+    // we add a field with type "reference" if it does not exist already
     if (lib\array_find_by_key($fields, 'type', 'reference') === false) {
         $guessed_prefix = lib\get_max_prefix(lib\array_map_attr($fields, 'id'));
         if ($guessed_prefix == '') $guessed_prefix = 'ccnlib_';

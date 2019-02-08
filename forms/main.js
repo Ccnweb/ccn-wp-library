@@ -152,6 +152,8 @@ let post_error_messages = {
     'INVALID_EMAIL': 'L\'adresse email est incorrecte',
     'POST_CREATION_FAILED': 'La requête a échoué, désolé :(',
     'DUPLICATE_POST_KEY': 'Une ressource avec ces informations existe déjà, impossible d\'en créer une autre',
+    'REGISTRATION_EXIST': 'Une pré-inscription avec ces informations existe déjà',
+    'TOO_YOUNG': 'La pré-inscription est possibles uniquement aux personnes majeures',
 }
 
 // ===============================================================
