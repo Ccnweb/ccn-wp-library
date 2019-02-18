@@ -41,7 +41,7 @@ function render_HTML_input($field, $options = array()) {
     // --> date
     $ifdate = ($field['type'] == 'date') ? ' data-position="top left" data-date-format="dd-mm-yyyy" data-language="fr" pattern="[0-9]{2}-[0-9]{2}-[0-9]{4}"' : '';
     // --> datetime
-    $ifdate = ($field['type'] == 'datetime') ? ' data-position="top left" data-date-format="dd-mm-yyyy" data-time-format="hh:ii" data-timepicker="true" data-language="fr" pattern="[0-9]{2}-[0-9]{2}-[0-9]{4} [0-9]{2}\:[0-9]{2}"' : '';
+    $ifdate = ($field['type'] == 'datetime') ? ' data-position="top left" data-date-format="dd-mm-yyyy" data-time-format="hh:ii" data-timepicker="true" data-language="fr" pattern="[0-9]{2}-[0-9]{2}-[0-9]{4} [0-9]{2}\:[0-9]{2}"' : $ifdate;
     $ifdateclass = (in_array($field['type'], array('date', 'datetime'))) ? ' datepicker-here' : '';
 
     // l'id du field HTML
