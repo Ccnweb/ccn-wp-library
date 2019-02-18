@@ -323,6 +323,8 @@ function field_structure_is_valid($field) {
      * Vérifie que le field en paramètre est bien valide
      */
 
+    if (!is_array($field)) {log\error('INVALID_FIELD_STRUCTURE', 'field type is no array ('.gettype($field).' instead) : json='.json_encode($field)); return false;}
+
     if (!isset($field['id'])) {log\error('INVALID_FIELD_STRUCTURE', 'field has no "id" attribute : json='.json_encode($field)); return false;}
     if (!isset($field['type']) && !isset($field['copy'])) {log\error('INVALID_FIELD_STRUCTURE', 'field has no "type" or "copy" attribute : json='.json_encode($field)); return false;}
 

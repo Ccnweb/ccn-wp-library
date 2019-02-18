@@ -124,7 +124,7 @@ function create_HTML_field($field, $options) {
     }
 
     // case of simple HTML input elements
-    if (in_array($field['type'], array('text', 'password', 'email', 'postal_code', 'date', 'number', 'tel'))) {
+    if (in_array($field['type'], array('text', 'password', 'email', 'postal_code', 'date', 'datetime', 'number', 'tel'))) {
         $html = fields\render_HTML_input($field, $options);
     // case of complex HTML elements
     } else if (function_exists('\ccn\lib\html_fields\render_HTML_'.$field['type'])) {

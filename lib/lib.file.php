@@ -1,12 +1,35 @@
 <?php
 namespace ccn\lib;
 
+function join_paths($paths) {
+    /**
+     * joins an array of paths together
+     */
+
+    if (!is_array($paths)) return false;
+    if (count($paths) < 1) return false;
+
+    $sep = "\\"; 
+    $other_sep = "/";
+    if (strpos($paths[0], '/') !== false) {
+        $sep = '/';
+        $other_sep = "\\";
+    }
+    $paths = array_map(function($p) use ($sep, $other_sep) {return str_replace($other_sep, $sep, $p);}, $paths);
+
+    $trimmed_paths = array_map(function($p) use ($sep) {return trim($p, $sep);}, $paths);
+    $trimmed_paths[0] = rtrim($paths[0], $sep);
+    return join($sep, $trimmed_paths);
+}
+
 function dir_filter_fun($dir, $fun, $recursive = true){
     /**
      * Comme array_filter mais sur les fichiers/dossiers contenus dans $dir
      */
 
+    if (strpos($dir, '/') !== false) $dir = str_replace("\\", "/", $dir);
     $res = dir_map_fun($dir, $fun, $recursive);
+    //echo json_encode($res).'<br><br>';
     return array_filter($res, function($el) {
         return $el['value'];
     });

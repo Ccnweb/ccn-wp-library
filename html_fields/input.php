@@ -17,7 +17,7 @@ function render_HTML_input($field, $options = array()) {
     // == 1. == Gestion des options
     $field_default = array(
         'id'                => 'dummy_id',     // l'id du custom meta field correspondant (ou post_title etc...)
-        'type'              => 'text', // 'text', 'date', 'tel', 'postal_code' ou tout attribut accepté par <input type="...">
+        'type'              => 'text', // 'text', 'date', 'datetime', 'tel', 'postal_code' ou tout attribut accepté par <input type="...">
         'required'          => true,
         'regex_pattern'     => '', // le pattern regex à ajouter éventuellement
         'html_label'        => 'text input',
@@ -39,8 +39,10 @@ function render_HTML_input($field, $options = array()) {
     // == 2. == Paramètres HTML calculés
     // gestion des types particuliers:
     // --> date
-    $ifdate = ($field['type'] == 'date') ? ' data-date-format="dd-mm-yyyy" data-language="fr" pattern="[0-9]{2}-[0-9]{2}-[0-9]{4}"' : '';
-    $ifdateclass = ($field['type'] == 'date') ? ' datepicker-here' : '';
+    $ifdate = ($field['type'] == 'date') ? ' data-position="top left" data-date-format="dd-mm-yyyy" data-language="fr" pattern="[0-9]{2}-[0-9]{2}-[0-9]{4}"' : '';
+    // --> datetime
+    $ifdate = ($field['type'] == 'datetime') ? ' data-position="top left" data-date-format="dd-mm-yyyy" data-time-format="hh:ii" data-timepicker="true" data-language="fr" pattern="[0-9]{2}-[0-9]{2}-[0-9]{4} [0-9]{2}\:[0-9]{2}"' : '';
+    $ifdateclass = (in_array($field['type'], array('date', 'datetime'))) ? ' datepicker-here' : '';
 
     // l'id du field HTML
     $field_id_html = $field['id'];//."_field";

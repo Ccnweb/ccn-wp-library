@@ -1,7 +1,10 @@
 <?php
 
+require_once('log.php'); use \ccn\lib\log as log;
 require_once('lib.php'); use \ccn\lib as lib;
+require_once(CCN_LIBRARY_PLUGIN_DIR . '/forms/lib.forms.php'); use \ccn\lib\html_fields as fields;
 require_once 'create-cp-html-forms.php';
+
 
 /**
  * Here we define a function that creates a contact form :
@@ -99,10 +102,12 @@ function ccnlib_register_contact_form($options = array()) {
     );
 
     // on ne garde que les champs nécessaires au formulaire de contact (parmi 'nom', 'prénom', 'email', ...)
-    $fields = array();
-    foreach ($all_fields as $field_name => $field_options) {
-        if (in_array($field_name, $options['fields'])) array_push($fields, $field_options);
+    $fields = [];
+    foreach ($options['fields'] as $f) {
+        if (gettype($f) == 'string' && isset($all_fields[$f])) $fields[] = $all_fields[$f];
+        else if (is_array($f) && fields\field_structure_is_valid($f)) $fields[] = $f;
     }
+    log\info('LODATE DIO !', $fields);
 
     // ==========================================================
     // == 1. == On enregistre le shortcode
@@ -112,7 +117,7 @@ function ccnlib_register_contact_form($options = array()) {
 
     // ==========================================================
     // == 2. == On enregistre le backend 
-    //          qui recevra le POST du formulaire et envoyer un email
+    //          qui recevra le POST du formulaire et enverra un email
     // ==========================================================
     // on crée le backend pour recevoir le POST du formulaire et envoyer le mail
     $options = array(
