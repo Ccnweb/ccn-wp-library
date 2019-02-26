@@ -25,15 +25,22 @@ class Ccn_Validator {
         if ($type == 'email') {
             return self::isValidEmail($str);
         } else if ($type == 'postal_code') {
-            $res = preg_match ( "/^[0-9]{5,5}$/" , $str );
-            if ($res) return array('valid' => true);
-            return array('valid' => false, 'reason' => 'INVALID_POSTALCODE', 'descr' => 'The postal code is invalid');
+            $res = preg_match ( "/^[0-9]+$/" , $str );
+            if ($res) return ['valid' => true];
+            return ['valid' => false, 'reason' => 'INVALID_POSTALCODE', 'descr' => 'The postal code is invalid'];
         } else if ($type == 'post_status') {
             $res = self::isValidPostStatus($str);
-            if ($res) return array('valid' => true);
-            return array('valid' => false, 'reason' => 'INVALID_POSTSTATUS', 'descr' => 'The postal status is invalid');
+            if ($res) return ['valid' => true];
+            return ['valid' => false, 'reason' => 'INVALID_POSTSTATUS', 'descr' => 'The postal status is invalid'];
+        } else if ($type == 'radio' || $type == 'dropdown') {
+            $res = in_array($str, array_keys($f['options']));
+            if ($res) return ['valid' => true];
+            return ['valid' => false, 'reason' => 'INVALID_'.strtoupper($type).'_VALUE', 'descr' => 'A '.$type.' element has an invalid value'];
+        } else if (isset($f['regex_pattern'])) {
+            $ok = preg_match("/".$f['regex_pattern']."/", $str);
+            return ['valid' => ($ok == 1)];
         } else {
-            return array('valid' => true);
+            return ['valid' => true];
         }
     }
  

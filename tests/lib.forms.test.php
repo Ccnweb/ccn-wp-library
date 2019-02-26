@@ -5,6 +5,86 @@ define( 'CCN_LIBRARY_PLUGIN_DIR', '..' );
 require_once(CCN_LIBRARY_PLUGIN_DIR . '/tests/test.php');
 require_once(CCN_LIBRARY_PLUGIN_DIR . '/forms/lib.forms.php'); use \ccn\lib\html_fields as fields;
 
+$prefix = 'test';
+$steps = array(
+    array(
+        'id' => 'je-suis',
+        'title' => 'Présentation',
+        'fields' => array(
+            $prefix.'_key_jesuis', 
+            $prefix.'key_ma_paroisse',
+            $prefix.'_key_persontype'
+        ),
+    ),
+    array(
+        'id' => 'infos-personnelles',
+        'title' => 'Informations personnelles',
+        'switch' => array(
+            array(
+                'id' => 'infos-personnelles-individuel',
+                'condition' => '{{'.$prefix.'_key_persontype}} == "individuel" || {{'.$prefix.'_key_persontype}} == "parent_seul"',
+                'title' => 'Informations personnelles',
+                'fields' => array($prefix.'_key_indiv', $prefix.'_key_genre', $prefix.'_key_birthdate', $prefix.'_key_email'),
+            ),
+            array(
+                'id' => 'infos-personnelles-adresse',
+                'fields' => array($prefix.'_key_address'),
+            ),
+            array(
+                'id' => 'infos-personnelles-couple',
+                'condition' => '{{'.$prefix.'_key_persontype}} == "famille" || {{'.$prefix.'_key_persontype}} == "couple_sans_enfants"',
+                'title' => 'Informations du couple',
+                'fields' => array(
+                            $prefix.'_key_indiv_lui', $prefix.'_key_birthdate_lui', $prefix.'_key_email_lui',
+                            $prefix.'_key_indiv_elle', $prefix.'_key_birthdate_elle', $prefix.'_key_email_elle'
+                ),
+            ),
+            array(
+                'id' => 'infos-enfants',
+                'condition' => '{{'.$prefix.'_key_persontype}} == "famille" || {{'.$prefix.'_key_persontype}} == "parent_seul"',
+                'fields' => array($prefix.'_childrenGR'),
+            ),
+        ),
+    ),
+    array(
+        'id' => 'logement-transport',
+        'title' => 'Logement & transport',
+        'fields' => array(
+            $prefix.'_key_logement', $prefix.'_key_logement_remarques',
+            $prefix.'_key_moyen_transport_aller', $prefix.'_date_aller', $prefix.'_gare_aller',
+            $prefix.'_key_moyen_transport_retour', $prefix.'_date_retour', $prefix.'_gare_retour'
+        ),
+        'field_conditions' => array(
+            $prefix.'_date_aller' => '{{'.$prefix.'_key_moyen_transport_aller}} != "ne_sais_pas"',
+            $prefix.'_gare_aller' => '{{'.$prefix.'_key_moyen_transport_aller}} == "avion" || {{'.$prefix.'_key_moyen_transport_aller}} == "train"',
+            $prefix.'_date_retour' => '{{'.$prefix.'_key_moyen_transport_retour}} != "ne_sais_pas"',
+            $prefix.'_gare_retour' => '{{'.$prefix.'_key_moyen_transport_retour}} == "avion" || {{'.$prefix.'_key_moyen_transport_retour}} == "train"',
+        ),
+    ),
+    array(
+        'id' => 'paiement',
+        'title' => 'Confirmation',
+        'fields' => array($prefix.'_paiement_modalite', $prefix.'_paiement_moyen', $prefix.'_html_paiement_description'),
+        'field_conditions' => array(
+            $prefix.'_paiement_moyen' => '{{'.$prefix.'_paiement_modalite}} == "now_all" || {{'.$prefix.'_paiement_modalite}} == "now_partial"',
+            $prefix.'_html_paiement_description' => '{{'.$prefix.'_paiement_moyen}} == "cheque"',
+        ),
+    ),
+);
+
+function test_field_is_required() {
+    global $steps;
+    $field_values = [
+        'test_key_persontype' => 'famille',
+        'test_key_moyen_transport_aller' => 'avion',
+    ];
+    $res = [];
+    $res[] = fields\field_is_required('test_key_email_elle', true, $steps, $field_values);
+    $res[] = fields\field_is_required('test_key_email_elle', true, $steps, ['test_key_persontype' => 'individuel']);
+    echo json_encode($res);
+}
+test_field_is_required();
+
 function test_build_html2() {
     $prefix = 'ccnbtc';
     // Here we test the build of an HTML table when sending HTML emails with form data
@@ -293,6 +373,6 @@ function test_build_html2() {
     file_put_contents('./lib.test_email_data_table.html', $res);
     //print_out($res);
 }
-test_build_html2();
+//test_build_html2();
 
 ?>

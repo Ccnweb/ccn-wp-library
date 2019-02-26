@@ -107,7 +107,6 @@ function ccnlib_register_contact_form($options = array()) {
         if (gettype($f) == 'string' && isset($all_fields[$f])) $fields[] = $all_fields[$f];
         else if (is_array($f) && fields\field_structure_is_valid($f)) $fields[] = $f;
     }
-    log\info('LODATE DIO !', $fields);
 
     // ==========================================================
     // == 1. == On enregistre le shortcode

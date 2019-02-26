@@ -42,23 +42,24 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
 
     $validation = new Ccn_Validator();
     $action_name = $prefix.'_'.$soft_action_name;
-    $html_email_models_dir = CCN_LIBRARY_PLUGIN_DIR . '/email_models'; // TODO delete this (moved in send_email.php)
+    //$html_email_models_dir = CCN_LIBRARY_PLUGIN_DIR . '/email_models'; // TODO delete this (moved in send_email.php)
 
     $default_options = array(
         'post_status'           => 'private',   // any valid post_status is ok but useful values are 'publish' to make the post available to any one and 'private' to make it hidden (for example for subscriptions)
-        'send_email'            => array(),     // (no email sent by default) array of arrays with elements like array('addresses' => array('coco@example.com'), 'subject' => 'id_of_subject_field', 'model' => 'path_to_html_email_model', 'model_args' => array('title' => 'Merci de nous contacter'))
+        'send_email'            => [],          // (no email sent by default) array of arrays with elements like array('addresses' => array('coco@example.com'), 'subject' => 'id_of_subject_field', 'model' => 'path_to_html_email_model', 'model_args' => array('title' => 'Merci de nous contacter'))
         'send_to_user'          => '',          // if the email should be sent to the email address of the user, write here the id of the user email field
         'create_post'           => true,        // créer ou non un nouveau post de type $cp_id (normalement c'est oui, sauf pour les formulaire de contact par ex)
-        'computed_fields'       => array(),     // associative array(meta_key => function($_POST)) that creates new fields for the new post
-        'custom_validations'    => array(),     // associative array(meta_key => function($fields, $sanitized, $existing_posts)) that does additional checks on step 2., before posting anything
+        'computed_fields'       => [],          // associative array(meta_key => function($_POST)) that creates new fields for the new post
+        'custom_validations'    => [],          // associative array(meta_key => function($fields, $sanitized, $existing_posts)) that does additional checks on step 2., before posting anything
 		'on_before_save_post'   => '',          // fonction custom, or list of custom functions executed just before saving a post
-		'on_finish'             => '',          // fonction custom, exécutée juste avant de renvoyer la réponse du serveur
+        'on_finish'             => '',          // fonction custom, exécutée juste avant de renvoyer la réponse du serveur
+        'steps'                 => [],          // the steps of the corresponding html form (useful if there some condition showing/hiding fields in some cases)
     );
     $options = array_merge($default_options, $options);
     
     $fields = fields\prepare_fields($fields);
 
-    $backend_callback = function() use ($cp_id, $fields, $validation, $html_email_models_dir, $options) {
+    $backend_callback = function() use ($cp_id, $fields, $validation, $options) {
         $log_stack_location = 'create-cp-rest-backend.php > create_POST_backend > $backend_callback'; // this is the string included in the logs to indicate where the error came from
         $final_response = array('success' => true); // le json final qui sera renvoyé
 
@@ -93,11 +94,14 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
             // all other cases
             } else {
                 $f_ids = fields\get_field_ids($f);
+                $a_priori_required = (!isset($f['required']) || $f['required']);
+                log\info('REQUIRED?', $f['id'].' :: '.$a_priori_required.' == '.json_encode(fields\field_is_required($f['id'], $a_priori_required, $options['steps'], $_POST)));
+                $not_required = (!empty($options['steps'])) ? !fields\field_is_required($f['id'], $a_priori_required, $options['steps'], $_POST) : !$a_priori_required;
 
                 foreach($f_ids as $f_id) {
                     if (isset($_POST[$f_id])) {
                         $res = $validation->isValidField($_POST[$f_id], $f); // TODO compléter la validation avec le field regex_pattern etc
-                        $res['valid'] = $res['valid'] || empty($_POST[$f_id]);
+                        $res['valid'] = $res['valid'] || ($not_required && empty($_POST[$f_id]));
                         if (!$res['valid']) {echo json_encode(array("success" => false, "errno" => $res['reason'], 'descr' => 'Invalid field '.$f_id.' : '. $res['descr'])); die();}
                         $sanitized[$f_id] = $_POST[$f_id];
                     }
@@ -297,5 +301,8 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
     add_action('wp_ajax_'.$action_name, $backend_callback ); // for logged-in users
     if ($accepted_users == 'all') add_action('wp_ajax_nopriv_'.$action_name, $backend_callback ); // for non-logged-in users
 }
+
+
+
 
 ?>

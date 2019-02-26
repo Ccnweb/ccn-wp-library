@@ -102,8 +102,91 @@ function build_html_from_form_data($form_data, $fields, $steps = array()) {
 }
 
 // =======================================================================
+//              FORM STEPS
+// =======================================================================
+
+function get_step_fields_ids($step) {
+    /**
+     * Returns the list of ids for this step
+     */
+
+    if (isset($step['fields'])) return $step['fields'];
+    if (isset($step['switch'])) return lib\array_flatten(array_map(function($sw) {return $sw['fields'];}, $step['switch']));
+}
+
+// =======================================================================
 //              FIELDS AND POST DATA
 // =======================================================================
+
+function field_is_required($field_id, $required, $steps, $field_values) {
+    /**
+     * Checks if $field should be required, based on :
+     * - the conditions defined in $steps
+     * - the $field_values received from a POST request
+     * 
+     * @param $field_id string      a field id (like 'test_key', not 'test_key__firstname')
+     * @param $required bool        is the field a priori required ?
+     * 
+     * Returns an array of booleans, on for each field_id in the $field to tell if it's required or not
+     */
+
+    if (gettype($field_id) != 'string') $field_id = $field_id['id'];
+
+    // we parse field values to be evaluated in conditions
+    $field_values = array_map(function($v) {
+        if (gettype($v) == 'string') return "'".str_replace("'", "\\'", $v)."'";
+        return $v;
+    }, $field_values);
+
+    // First we find the steps where there is $field
+    $interesting_steps = array_filter($steps, function($step) use ($field_id) {
+        $step_fields = get_step_fields_ids($step);
+        return in_array($field_id, $step_fields);
+    });
+
+    // then for each of these steps, we see if there is at least one condition 
+    $at_least_one_condition_met = false;
+    foreach ($interesting_steps as $step) {
+
+        // we check the step's root condition
+        $root_condition_met = true;
+        if (isset($step['condition'])) {
+            $root_condition_met = false;
+            $condition = lib\parseTemplateString($step['condition'], $field_values);
+            if (lib\eval_condition($condition) == 1) $root_condition_met = true;
+        }
+
+        // if the step has a switch, we check if any switch condition is met
+        if ($root_condition_met && isset($step['switch'])) {
+            $interesting_switches = array_filter($step['switch'], function($sw) use ($field_id) {return in_array($field_id, $sw['fields']);});
+            $switch_condition_met = false;
+            foreach ($interesting_switches as $switch) {
+                if (isset($switch['condition'])) {
+                    $condition = lib\parseTemplateString($switch['condition'], $field_values);
+                    // if the step condition is met, then the field is required
+                    if (lib\eval_condition($condition) == 1) $switch_condition_met = true;
+                }
+            }
+            if ($switch_condition_met) $at_least_one_condition_met = true;
+
+        // if the step has field level conditions, check if one concerning $field is met or not
+        } else if ($root_condition_met && isset($step['field_conditions'])) {
+            if (isset($step['field_conditions'][$field['id']])) {
+                $condition = lib\parseTemplateString($step['field_conditions'][$field['id']], $field_values);
+                if (lib\eval_condition($condition) == 1) $at_least_one_condition_met = true;
+            } else $at_least_one_condition_met = true;
+        } else $at_least_one_condition_met = true;
+    }
+
+    return (count($interesting_steps) == 0 || $at_least_one_condition_met) && $required;
+}
+
+function check_field_condition($condition_str, $field_values) {
+    /**
+     * Checks if a condition like "{{my_meta_key}} == 'coco' || {{my_meta_key}} == 'riri'"
+     * is evaluated to true or false based on the field values 
+     */
+}
 
 function extract_field_post_data($field, $post_data) {
     /**

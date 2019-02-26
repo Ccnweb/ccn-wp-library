@@ -135,6 +135,7 @@ function ajax_form_submit(submit_btn) {
 
             // remise à zéro interne
             submit_btn.html(submit_btn_html);
+            goToStep(form_obj, 0, true); // this returns to the first step. Function defined in forms/steps/load_front_steps.js
             FORM_SUBMITTING = false;
             return false;
         }

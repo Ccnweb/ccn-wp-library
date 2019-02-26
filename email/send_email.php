@@ -103,7 +103,7 @@ function send($data, $to_addresses, $subject, $model, $model_args = array(), $op
             return $final_response;
         } else {
             $error_msg = array('success' => false, 'errno' => 'EMAIL_SEND_FAILED', 'descr' => 'Impossible to send an email to '.json_encode($to));
-            log\error('in create-cp-rest-backend, send email failed', $error_msg);
+            log\error('in email/send_email.php, send email failed', $error_msg);
             return $error_msg;
         }
     }

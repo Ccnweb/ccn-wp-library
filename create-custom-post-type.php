@@ -110,8 +110,8 @@ function create_custom_post_key($cp_name, $f) {
 function create_custom_post_metabox($cp_name, $metabox, $prefix, $all_fields) {
 
     $metabox_fun = function() use ($cp_name, $prefix, $all_fields, $metabox) {
-
-        $metabox_id = $cp_name.'_custom_metabox_'.sanitize_title($metabox['title'], str_replace(' ', '-', $metabox['title']));
+        
+        $metabox_id = $cp_name.'_custom_metabox_'.sanitize_title($metabox['title'], preg_replace('/[\s\'\"\`]+/', '-', $metabox['title']));
         
         // make sure the form request comes from WordPress
 	    //wp_nonce_field( basename( __FILE__ ), $metabox['title'] );
@@ -157,7 +157,7 @@ function create_custom_post_metabox($cp_name, $metabox, $prefix, $all_fields) {
                         ?>
 
                         <div class="metabox_field_container">
-                            <!-- <label for="<?php echo $field['id']; ?>_field"><?php echo $label; ?></label> -->
+                            <!-- <label for="<?php /* echo $field['id']; */ ?>_field"><?php /* echo $label; */ ?></label> -->
                             <?php if (fields\is_showable_in($field, 'admin_edit')) echo create_HTML_field($field, $curr_options); ?>
                         </div>
 
