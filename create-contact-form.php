@@ -48,12 +48,12 @@ function ccnlib_register_contact_form($options = array()) {
         'send_email' => array(
             array(
                 'addresses'     => array('web@chemin-neuf.org'),
-                'subject'       => 'Nouvelle demande de contact de {{'.$prefix.'_key_firstname}} {{'.$prefix.'_key_name}}',
+                'subject'       => sprintf(__('Nouvelle demande de contact de %s', 'ccn'), '{{'.$prefix.'_key_firstname}} {{'.$prefix.'_key_name}}'),
                 'model'         => 'simple_contact.html',
                 'model_args'    => array(
-                        'title'     => 'Que le Seigneur vous donne sa paix !',
-                        'subtitle'  => 'Louez Dieu en tous temps !',
-                        'body'      => 'Voici la demande de contact :<br>
+                        'title'     => __('Que le Seigneur vous donne sa paix !', 'ccn'),
+                        'subtitle'  => __('Louez Dieu en tous temps !', 'ccn'),
+                        'body'      => __('Voici la demande de contact', 'ccn').' :<br>
                                             <b>Prénom: </b>{{ccnlib_key_firstname}}<br>
                                             <b>Nom: </b>{{ccnlib_key_name}}<br>
                                             <b>Email: </b>{{ccnlib_key_email}}<br>
@@ -78,25 +78,25 @@ function ccnlib_register_contact_form($options = array()) {
         'prenom' => array( // Prénom
             'id' => $prefix.'_key_firstname',
             'description'  => "Person first name for contact form",
-            'html_label' => 'Prénom',
+            'html_label' => __('Prénom', 'ccn'),
             'type' => "text"
         ),
         'nom' => array( // Nom
             'id' => $prefix.'_key_name',
             'description'  => "Person name for contact form",
-            'html_label' => 'Nom',
+            'html_label' => __('Nom', 'ccn'),
             'type' => "text"
         ),
         'email' => array( // Email
             'id' => $prefix.'_key_email',
             'description'  => "Email address for contact form",
-            'html_label' => 'Email',
+            'html_label' => __('Email', 'ccn'),
             'type' => "email"
         ),
         'message' => array( // Message
             'id' => $prefix.'_key_message',
             'type' => 'textarea',
-            'html_label' => 'Votre message',
+            'html_label' => __('Votre message', 'ccn'),
             'rows' => $options['textarea_rows'],
         )
     );

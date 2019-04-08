@@ -312,7 +312,7 @@ function array_build($keys, $values) {
 
 function array_has_string_key($arr) {
     /**
-     * tells is array has at least one string key
+     * tells if array has at least one string key
      */
 
     if (!is_array($arr)) {

@@ -2,8 +2,9 @@
 /**
 * Plugin Name: CCN Librairie
 * Description: Librairie de fonctions pour aider à créer des plugins Wordpress pour les sites de la Communauté du Chemin Neuf
-* Version: 2.2.0
+* Version: 2.2.1
 * Author: Communauté du Chemin Neuf
+* Text Domain: ccn
 * GitHub Plugin URI: https://github.com/Ccnweb/ccn-wp-library.git
 */
 
@@ -81,6 +82,16 @@ function ccnlib_admin_scripts($hook) {
     wp_enqueue_script('ccnlib-admin-script', CCN_LIBRARY_PLUGIN_URL . '/js/admin.js', array('jquery'), '20190125', true);
 }
 add_action( 'admin_enqueue_scripts', 'ccnlib_admin_scripts' );
+
+/* ========================================================= */
+/*                   TRANSLATION                             */
+/* ========================================================= */
+
+// sources : 
+// https://premium.wpmudev.org/blog/how-to-localize-a-wordpress-theme-and-make-it-translation-ready/
+// https://github.com/fxbenard/Blank-WordPress-Pot
+
+load_theme_textdomain( 'ccn', get_template_directory().'/languages' );
 
 require_once 'create-contact-form.php';
 

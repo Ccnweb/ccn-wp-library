@@ -36,6 +36,11 @@ function render_HTML_input($field, $options = array()) {
     );
     $options = lib\assign_default($options_default, $options);
 
+    // setup translated strings with either polylang or default WP
+    if (function_exists('pll__')) {
+        $field['html_label'] = pll__($field['html_label']);
+    }
+
     // == 2. == Paramètres HTML calculés
     // gestion des types particuliers:
     // --> date

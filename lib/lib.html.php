@@ -71,4 +71,5 @@ function get_js_script($js_template_path, $data) {
     return '<script type="text/javascript">'.$js_parsed.'</script>';
 }
 
+
 ?>
