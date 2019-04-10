@@ -1,6 +1,16 @@
 <?php
 namespace ccn\lib;
 
+function one_of() {
+    /**
+     * returns the first non-empty argument
+     */
+
+    $arg_list = func_get_args();
+    foreach ($arg_list as $arg) {
+        if (!empty($arg)) return $arg;
+    }
+}
 
 function eval_condition($condition) {
     /**
