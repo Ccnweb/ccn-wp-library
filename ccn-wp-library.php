@@ -83,15 +83,23 @@ function ccnlib_admin_scripts($hook) {
 }
 add_action( 'admin_enqueue_scripts', 'ccnlib_admin_scripts' );
 
-/* ========================================================= */
-/*                   TRANSLATION                             */
-/* ========================================================= */
-
-// sources : 
-// https://premium.wpmudev.org/blog/how-to-localize-a-wordpress-theme-and-make-it-translation-ready/
-// https://github.com/fxbenard/Blank-WordPress-Pot
-
-load_theme_textdomain( 'ccn', get_template_directory().'/languages' );
+add_action( 'init', function() {
+    
+    /* ========================================================= */
+    /*                   TRANSLATION                             */
+    /* ========================================================= */
+    
+    // sources : 
+    // https://premium.wpmudev.org/blog/how-to-localize-a-wordpress-theme-and-make-it-translation-ready/
+    // https://github.com/fxbenard/Blank-WordPress-Pot
+    
+    //lib\php_console_log( CCN_LIBRARY_PLUGIN_DIR . '/languages');
+    //$b = load_plugin_textdomain( 'ccn', false, basename( dirname( __FILE__ ) ) . '/languages' );
+    $b = load_plugin_textdomain( 'ccn', false, CCN_LIBRARY_PLUGIN_DIR . '/languages' );
+    //if (!$b) lib\php_console_log("COULD NOT LOAD TRANSLATIONS FOR CCN CORE LIBRARY", "error");
+    
+});
+$b = load_plugin_textdomain( 'ccn', false, CCN_LIBRARY_PLUGIN_DIR . '/languages' );
 
 require_once 'create-contact-form.php';
 
