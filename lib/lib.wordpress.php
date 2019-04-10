@@ -62,4 +62,19 @@ function enqueue_elements_regex($type, $dir, $regex_pattern = '', $options = arr
     return $element_to_be_enqueued;
 }
 
+function php_console_log($msg, $type = 'log', $style = '') {
+    /**
+     * Log something in the javascript console from php code
+     */
+
+    $type = strtolower($type);
+    if ($type == 'err') $type = 'error';
+    if ($style != '' && !preg_match("/^\%c\s+/", $msg)) $msg = "%c ".$msg;
+
+    $msg = str_replace('"', '\\"', $msg);
+    $str = 'console.'.$type.'("'.$msg.'"';
+    $str .= ($style != '') ? ', "'.$style.'")' : ')';
+    echo '<script>'.$str.'</script>';
+}
+
 ?>
