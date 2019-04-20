@@ -1,6 +1,24 @@
 <?php
 namespace ccn\lib;
 
+
+
+function tags_to_css_classes($posttags = null) {
+    /**
+     * transforms tags like class-* in a string representing space-delimited CSS classes
+     */
+
+    if ($posttags == null) $posttags = get_the_tags();
+    if (!is_array($posttags)) return '';
+
+    $arr_posttags = array_map(function($tag) {return $tag->name;}, $posttags);
+    $s_posttags = '##'.implode('##', $arr_posttags).'##';
+
+    // get the CSS classes defined as tags (in the form "class-...")
+    preg_match_all('/##class-([^#]+)##/', $s_posttags, $result);
+    return ($result) ? ' '.implode(' ', $result[1]): '';
+}
+
 function enqueue_styles_regex($dir, $regex_pattern, $options = array()) {
     return enqueue_elements_regex('style', $dir, $regex_pattern, $options);
 }
@@ -74,7 +92,7 @@ function php_console_log($msg, $type = 'log', $style = '') {
     $msg = str_replace('"', '\\"', $msg);
     $str = 'console.'.$type.'("'.$msg.'"';
     $str .= ($style != '') ? ', "'.$style.'")' : ')';
-    echo '<script>'.$str.'</script>';
+    echo '<script class="php_log">'.$str.'</script>';
 }
 
 ?>
