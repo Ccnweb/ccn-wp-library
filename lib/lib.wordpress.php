@@ -1,7 +1,31 @@
 <?php
 namespace ccn\lib;
 
+function tags_to_wrap_content($content) {
+    /**
+     * Outputs the $content but wrapped in the elements defined by the wrap-* tags
+     * 
+     * e.g. if the current post has a tag "wrap-div.coco.riri", 
+     * this will return the $content wrapped in a <div class="coco riri"></div> element
+     */
 
+    $posttags = get_the_tags();
+	if (!is_array($posttags)) return $content;
+
+	$arr_posttags = array_map(function($tag) {return $tag->name;}, $posttags);
+	$s_posttags = '@@'.implode('@@', $arr_posttags).'@@';
+
+	// get the tags of the form "wrap-..."
+	preg_match_all('/@@wrap-([^#]+)@@/', $s_posttags, $result);
+	if (!$result) return $content;
+	
+	foreach($result[1] as $wrapper) {
+
+		$content = "".$content."";
+	}
+
+	return $content;
+}
 
 function tags_to_css_classes($posttags = null) {
     /**

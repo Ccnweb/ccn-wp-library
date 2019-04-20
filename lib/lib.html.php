@@ -7,6 +7,17 @@ require_once('lib.string.php');
 /*           HTML MANIPULATION          */
 /* ==================================== */
 
+function parse_html_snippet($str_snippet) {
+    /**
+     * transforms a snippet like "div#coco.riri.gio" 
+     * in ['tag_name' => 'div', 'id' => 'coco', 'class' => 'riri gio']
+     */
+
+    $o = [];
+
+    // get tag_name
+    preg_match("", $str_snippet);
+}
 
 function build_html($elements, $data) {
     /**
