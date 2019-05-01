@@ -7,10 +7,26 @@ require_once('test.php');
 require_once(CCN_LIBRARY_PLUGIN_DIR . '/lib.php');
 use \ccn\lib as lib;
 
+$all = ['test_parse_html_snippet', 'test_build_html_tag'];
+run_suite($all);
 
+function test_build_html_tag() {
+    $res = lib\build_html_tag('div', ['tag_name' => 'div', 'id' => '', 'class' => ['riri', 'coco']], 'the content');
+    expect($res, '<div class="riri coco">the content</div>');
+}
 
-
-
+function test_parse_html_snippet() {
+    $res = lib\parse_html_snippet("div#coco.riri.gio");
+    expect($res, ['tag_name' => 'div', 'id' => 'coco', 'class' => ['riri', 'gio']]);
+    $res = lib\parse_html_snippet("div#coco");
+    expect($res, ['tag_name' => 'div', 'id' => 'coco', 'class' => []]);
+    $res = lib\parse_html_snippet("div.truc-bidule");
+    expect($res, ['tag_name' => 'div', 'id' => '', 'class' => ['truc-bidule']]);
+    $res = lib\parse_html_snippet("div");
+    expect($res, ['tag_name' => 'div', 'id' => '', 'class' => []]);
+    $res = lib\parse_html_snippet("");
+    expect($res, false);
+}
 
 
 // ====================================================

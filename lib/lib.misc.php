@@ -1,6 +1,17 @@
 <?php
 namespace ccn\lib;
 
+function first_not_falsy($arr, $default = false) {
+    /**
+     * @return the first element in $arr that is not falsy
+     * @return $default if all elements are falsy
+     */
+    foreach ($arr as $k => $v) {
+        if ($v) return $v;
+    }
+    return $default;
+}
+
 function one_of() {
     /**
      * returns the first non-empty argument

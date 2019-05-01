@@ -1,7 +1,9 @@
 <?php
 namespace ccn\lib;
 
-function tags_to_wrap_content($content) {
+require_once('lib.html.php');
+
+function tags_to_wrap_content($content, $posttags = null) {
     /**
      * Outputs the $content but wrapped in the elements defined by the wrap-* tags
      * 
@@ -9,10 +11,10 @@ function tags_to_wrap_content($content) {
      * this will return the $content wrapped in a <div class="coco riri"></div> element
      */
 
-    $posttags = get_the_tags();
+    if($posttags == null) $posttags = get_the_tags();
 	if (!is_array($posttags)) return $content;
 
-	$arr_posttags = array_map(function($tag) {return $tag->name;}, $posttags);
+	$arr_posttags = array_map(function($tag) {return (property_exists($tag, 'name')) ? $tag->name : $tag;}, $posttags);
 	$s_posttags = '@@'.implode('@@', $arr_posttags).'@@';
 
 	// get the tags of the form "wrap-..."
@@ -20,8 +22,9 @@ function tags_to_wrap_content($content) {
 	if (!$result) return $content;
 	
 	foreach($result[1] as $wrapper) {
-
-		$content = "".$content."";
+        $html_obj = parse_html_snippet($wrapper);
+        if ($html_obj === false) continue;
+		$content = build_html_tag($html_obj['tag_name'], $html_obj, $content);
 	}
 
 	return $content;

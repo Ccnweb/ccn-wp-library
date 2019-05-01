@@ -10,13 +10,47 @@ require_once('lib.string.php');
 function parse_html_snippet($str_snippet) {
     /**
      * transforms a snippet like "div#coco.riri.gio" 
-     * in ['tag_name' => 'div', 'id' => 'coco', 'class' => 'riri gio']
+     * in ['tag_name' => 'div', 'id' => 'coco', 'class' => ['riri', 'gio']]
      */
 
     $o = [];
 
     // get tag_name
-    preg_match("", $str_snippet);
+    if (!preg_match("/^[^\.\#]+/", $str_snippet, $tag_name)) return false;
+    $o['tag_name'] = $tag_name[0];
+
+    // get id
+    $o['id'] = '';
+    if (preg_match("/\#([^\.\#]+)/", $str_snippet, $id)) $o['id'] = $id[1];
+
+    // get the classes
+    preg_match_all("/\.([^\.\#]+)/", $str_snippet, $classes);
+    if ($classes && count($classes) > 1) $o['class'] = $classes[1];
+
+    return $o;
+}
+
+function build_html_tag($tag_name, $attributes, $content = '') {
+    /**
+     * Builds an HTML tag like this :
+     * $tag_name = "div"
+     * $attributes = ['class' => 'truc', 'coco' => 1]
+     * $content = "the content"
+     * --> <div class"truc" coco="1">the content</div>
+     * 
+     * @param string tag_name
+     * @param array $attributes array associative
+     * @return string
+     */
+
+    $s_html = '<'.$tag_name;
+    foreach ($attributes as $key => $val) {
+        if ($key == 'tag_name' || empty($val)) continue;
+        if (is_array($val)) $val = implode(' ', $val);
+        $s_html .= ' '.$key.'="'.$val.'"';
+    }
+    $s_html .= '>'.$content.'</'.$tag_name.'>';
+    return $s_html;
 }
 
 function build_html($elements, $data) {
