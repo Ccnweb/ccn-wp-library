@@ -33,6 +33,8 @@ function tags_to_wrap_content($content, $posttags = null) {
 function tags_to_css_classes($posttags = null) {
     /**
      * transforms tags like class-* in a string representing space-delimited CSS classes
+     * 
+     * @param $posttags     either an array of tag items or null (if null, post tags will be retrieved with "get_the_tags()")
      */
 
     if ($posttags == null) $posttags = get_the_tags();
@@ -42,7 +44,7 @@ function tags_to_css_classes($posttags = null) {
     $s_posttags = '##'.implode('##', $arr_posttags).'##';
 
     // get the CSS classes defined as tags (in the form "class-...")
-    preg_match_all('/##class-([^#]+)##/', $s_posttags, $result);
+    preg_match_all('/#class-([^#]+)#/', $s_posttags, $result);
     return ($result) ? ' '.implode(' ', $result[1]): '';
 }
 
