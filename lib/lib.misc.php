@@ -12,15 +12,17 @@ function first_not_falsy($arr, $default = false) {
     return $default;
 }
 
-function one_of() {
+function one_of($return_val = false) {
     /**
      * returns the first non-empty argument
+     * returns $return_val if everything is false
      */
 
     $arg_list = func_get_args();
     foreach ($arg_list as $arg) {
         if (!empty($arg)) return $arg;
     }
+    return $return_val;
 }
 
 function eval_condition($condition) {
