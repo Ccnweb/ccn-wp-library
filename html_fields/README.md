@@ -1,6 +1,6 @@
 # Créer un nouveau HTML field
 
-1. créer un fichier PHP dans le dossier html_fields portant le nom du custom HTML field, par exemple `my_field.php`
+1. créer un fichier PHP dans le dossier html_fields portant le nom du custom HTML field, par exemple `my_field.php`. Le namespace doit être ccn\lib\html_fields
 2. dans ce fichier créer une fonction portant le nom "render_HTML_{nom du field}", par exemple `render_HTML_my_field` (s'inspirer des autres fichiers pour avoir une structure similaire)
 3. la fonction ainsi créée doit prendre en arguments 2 paramètres : 
     * le premier est l'objet `$field` qui contient les paramètres du champs 

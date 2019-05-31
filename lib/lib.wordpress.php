@@ -3,6 +3,13 @@ namespace ccn\lib;
 
 require_once('lib.html.php');
 
+function get_image_url_by_title($title) {
+    /**
+     * returns the image url from the given image title
+     */
+    return wp_get_attachment_url(get_page_by_title($title, 'OBJECT', 'attachment')->ID);
+}
+
 function tags_to_wrap_content($content, $posttags = null) {
     /**
      * Outputs the $content but wrapped in the elements defined by the wrap-* tags
