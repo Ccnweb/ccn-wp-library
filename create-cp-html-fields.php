@@ -165,6 +165,9 @@ function get_field_wrapper($field) {
         } else if ($field['type'] == 'date') {
             $start .= '<div class="input-group"><div class="input-group-prepend"><label class="input-group-text" for="'.$ids[0].'"><i class="far fa-calendar-alt"></i></label></div>';
             $end = '</div>' . $end;
+        } else if ($field['type'] == 'tel') {
+            $start .= '<div class="input-group"><div class="input-group-prepend"><label class="input-group-text" for="'.$ids[0].'"><i class="fas fa-phone"></i></label></div>';
+            $end = '</div>' . $end;
         } else $start .= '<label for="'.$ids[0].'">Email address</label>';
 
         if (isset($field['msg']) && isset($field['msg']['info'])) $end = '<small class="form-msg-info" class="form-text text-muted">'.$field['msg']['info'].'</small>'.$end;
