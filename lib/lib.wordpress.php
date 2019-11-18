@@ -62,5 +62,4 @@ function enqueue_elements_regex($type, $dir, $regex_pattern = '', $options = arr
     return $element_to_be_enqueued;
 }
 
-
 ?>

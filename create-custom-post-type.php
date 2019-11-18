@@ -109,6 +109,11 @@ function create_custom_post_key($cp_name, $f) {
 // 2. Creates a meta box for a custom post
 function create_custom_post_metabox($cp_name, $metabox, $prefix, $all_fields) {
 
+    // translate strings
+    if (function_exists('pll__')) {
+        $metabox['title'] = pll__($metabox['title']);
+    }
+
     $metabox_fun = function() use ($cp_name, $prefix, $all_fields, $metabox) {
         
         $metabox_id = $cp_name.'_custom_metabox_'.sanitize_title($metabox['title'], preg_replace('/[\s\'\"\`]+/', '-', $metabox['title']));
