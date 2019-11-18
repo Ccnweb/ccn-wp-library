@@ -177,7 +177,7 @@ function create_POST_backend($cp_id, $prefix, $soft_action_name, $accepted_users
             }
 
             // == 3. == on crée un post
-            if (options['create_post']) {
+            if ($options['create_post']) {
 
                 // we compute the reference id
                 $ref_field = lib\array_find_by_key($fields, 'type', 'reference');

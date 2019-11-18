@@ -1,0 +1,58 @@
+# Be The Church
+# Copyright 2019
+# This file is distributed under the GNU General Public License v3 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Be The Church v1.0.0\n"
+"POT-Creation-Date: 2019-04-08 12:03+0200\n"
+"PO-Revision-Date: \n"
+"Language-Team: CCN Web <web@chemin-neuf.org>\n"
+"Report-Msgid-Bugs-To: Aleksandra Seges <web@chemin-neuf.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"X-Textdomain-Support: yesX-Generator: Poedit 1.6.4\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;esc_html_e;esc_html_x:1,2c;esc_html__;esc_attr_e;esc_attr_x:1,2c;esc_attr__;_ex:1,2c;_nx:4c,1,2;_nx_noop:4c,1,2;_x:1,2c;_n:1,2;_n_noop:1,2;__ngettext:1,2;__ngettext_noop:1,2;_c,_nc:4c,1,2\n"
+"X-Poedit-Basepath: ..\n"
+"X-Generator: Poedit 2.2.1\n"
+"Last-Translator: \n"
+"Language: pl_PL\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: class-wp-bootstrap-navwalker.php:364
+msgid "Add a menu"
+msgstr "Dodaj menu"
+
+#: functions.php:192
+msgid "Envoyer"
+msgstr "Wyślij"
+
+#: functions.php:196
+msgid "Ma paroisse"
+msgstr "Moja parafia"
+
+#: custom post types/preinscriptions.php:39
+msgid "Prénom"
+msgstr "Imię"
+
+#: custom post types/preinscriptions.php:45
+msgid "Nom"
+msgstr "Nazwisko"
+
+#: custom post types/preinscriptions.php:53
+msgid "Email"
+msgstr "E-mail"
+
+#: custom post types/preinscriptions.php:59
+msgid "Téléphone"
+msgstr "Telefon"
+
+#: custom post types/preinscriptions.php:65
+msgid "Paroisse"
+msgstr "Parafia"
+
+#: custom post types/inscriptions.php:57
+msgid "Je suis"
+msgstr "Jestem"

@@ -1,6 +1,60 @@
 <?php
 namespace ccn\lib;
 
+require_once('lib.html.php');
+
+function get_image_url_by_title($title) {
+    /**
+     * returns the image url from the given image title
+     */
+    return wp_get_attachment_url(get_page_by_title($title, 'OBJECT', 'attachment')->ID);
+}
+
+function tags_to_wrap_content($content, $posttags = null) {
+    /**
+     * Outputs the $content but wrapped in the elements defined by the wrap-* tags
+     * 
+     * e.g. if the current post has a tag "wrap-div.coco.riri", 
+     * this will return the $content wrapped in a <div class="coco riri"></div> element
+     */
+
+    if($posttags == null) $posttags = get_the_tags();
+	if (!is_array($posttags)) return $content;
+
+	$arr_posttags = array_map(function($tag) {return (property_exists($tag, 'name')) ? $tag->name : $tag;}, $posttags);
+	$s_posttags = '@@'.implode('@@', $arr_posttags).'@@';
+
+	// get the tags of the form "wrap-..."
+	preg_match_all('/@@wrap-([^#]+)@@/', $s_posttags, $result);
+	if (!$result) return $content;
+	
+	foreach($result[1] as $wrapper) {
+        $html_obj = parse_html_snippet($wrapper);
+        if ($html_obj === false) continue;
+		$content = build_html_tag($html_obj['tag_name'], $html_obj, $content);
+	}
+
+	return $content;
+}
+
+function tags_to_css_classes($posttags = null) {
+    /**
+     * transforms tags like class-* in a string representing space-delimited CSS classes
+     * 
+     * @param $posttags     either an array of tag items or null (if null, post tags will be retrieved with "get_the_tags()")
+     */
+
+    if ($posttags == null) $posttags = get_the_tags();
+    if (!is_array($posttags)) return '';
+
+    $arr_posttags = array_map(function($tag) {return $tag->name;}, $posttags);
+    $s_posttags = '##'.implode('##', $arr_posttags).'##';
+
+    // get the CSS classes defined as tags (in the form "class-...")
+    preg_match_all('/#class-([^#]+)#/', $s_posttags, $result);
+    return ($result) ? ' '.implode(' ', $result[1]): '';
+}
+
 function enqueue_styles_regex($dir, $regex_pattern, $options = array()) {
     return enqueue_elements_regex('style', $dir, $regex_pattern, $options);
 }
@@ -60,6 +114,21 @@ function enqueue_elements_regex($type, $dir, $regex_pattern = '', $options = arr
     }
 
     return $element_to_be_enqueued;
+}
+
+function php_console_log($msg, $type = 'log', $style = '') {
+    /**
+     * Log something in the javascript console from php code
+     */
+
+    $type = strtolower($type);
+    if ($type == 'err') $type = 'error';
+    if ($style != '' && !preg_match("/^\%c\s+/", $msg)) $msg = "%c ".$msg;
+
+    $msg = str_replace('"', '\\"', $msg);
+    $str = 'console.'.$type.'("'.$msg.'"';
+    $str .= ($style != '') ? ', "'.$style.'")' : ')';
+    echo '<script class="php_log">'.$str.'</script>';
 }
 
 ?>

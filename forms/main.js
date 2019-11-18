@@ -4,6 +4,9 @@ jQuery(document).ready(function($) {
     // source : https://getbootstrap.com/docs/4.1/components/tooltips/
     if ($('[data-toggle="tooltip"]').length) $('[data-toggle="tooltip"]').tooltip();
 
+    // check that all html ids are unique ! (to identify when a form is inserted multiple times in the same page)
+    if (!check_html_unique_ids()) console.error('We found some HTML ids that are not unique, ccn forms cannot work !'); // TODO do a return here
+
     // on itinialise les datepickers dans les formulaires
     if ($('.datepicker-here').length) $('.datepicker-here').datepicker();
 
@@ -221,6 +224,7 @@ function load_custom_logic(rules) {
 
     for (let rule of rules) {
         let source_selector = (rule.source_selector) ? rule.source_selector : '#' + rule.source_ids.join(', #');
+        console.log('source sel', source_selector);
 
         // we define the current rule function
         let curr_check_rule = function() {
@@ -232,7 +236,7 @@ function load_custom_logic(rules) {
         curr_check_rule();
 
         // we register the rule in a change event
-        jQuery(source_selector).change(curr_check_rule);
+        jQuery(source_selector).change(curr_check_rule); // curr_check_rule
     }
 }
 
@@ -240,6 +244,7 @@ function check_rule_condition(rule) {
     /**
      * Renvoie true ou false selon si la rule est ou non vérifiée
      */
+    console.log('checking rule', rule);
     let list_values = rule.source_ids.map(id => getVal(id));
     let parsed_condition = rule.condition;
     for (let i = 0; i < rule.source_ids.length; i++) {
@@ -285,6 +290,26 @@ function get_select_options(el) {
         options.push(html_options[i].value)
     }
     return options
+}
+
+function check_html_unique_ids() {
+    /**
+     * Checks that all HTML elements have a unique id
+     */
+
+    let ids = [];
+    jQuery('[id]').each(function() {
+        ids.push(jQuery(this).attr('id'));
+    });
+    let mem = [];
+    for (let i of ids) {
+        if (mem.includes(i)) {
+            console.error('found html duplicate ids : '+i);
+            return false;
+        }
+        mem.push(i);
+    }
+    return true;
 }
 
 

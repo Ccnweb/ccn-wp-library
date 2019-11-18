@@ -121,7 +121,7 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields, $st
             jQuery(document).ready(function($) {
 
                 let rules = '.json_encode($rules).';
-                console.log("RULES", typeof rules, rules);
+                //console.log("RULES", typeof rules, rules);
                 load_custom_logic(rules);
 
             });

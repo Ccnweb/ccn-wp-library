@@ -80,7 +80,7 @@ function send($data, $to_addresses, $subject, $model, $model_args = array(), $op
     $model_args = lib\assign_default($model_args, $data);
     $message = lib\parseTemplateString($message, $model_args); // TODO use Twig or a good php templating system instead of a custom one
     if ($message === false) {
-        log\error('FAILED_TO_PARSE_EMAIL', 'failed to parse email template');
+        log\error('FAILED_TO_PARSE_EMAIL', 'failed to parse email template MESSAGE='.json_encode($message).'   MODEL_ARGS='.json_encode($model_args));
         return ['success' => false, 'errno' => 'FAILED_TO_PARSE_EMAIL', 'descr' => 'I failed to parse the email template with data, sorry'];
     }
 

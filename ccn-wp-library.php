@@ -2,8 +2,9 @@
 /**
 * Plugin Name: CCN Librairie
 * Description: Librairie de fonctions pour aider à créer des plugins Wordpress pour les sites de la Communauté du Chemin Neuf
-* Version: 2.2.0
+* Version: 2.2.1
 * Author: Communauté du Chemin Neuf
+* Text Domain: ccn
 * GitHub Plugin URI: https://github.com/Ccnweb/ccn-wp-library.git
 */
 
@@ -50,7 +51,7 @@ function ccnlib_scripts() {
                     )
     );
     // we inject the variable that contains our ajax rest endpoint for forms in the main
-    wp_enqueue_script( 'ccnlib-script', CCN_LIBRARY_PLUGIN_URL . 'forms/main.js', array('jquery'), '20190129', true );
+    wp_enqueue_script( 'ccnlib-script', CCN_LIBRARY_PLUGIN_URL . 'forms/main.js', array('jquery'), '007', true );
     wp_localize_script('ccnlib-script', 'ajax_url', admin_url( 'admin-ajax.php' ) );
 
     // load js in /forms
@@ -81,6 +82,24 @@ function ccnlib_admin_scripts($hook) {
     wp_enqueue_script('ccnlib-admin-script', CCN_LIBRARY_PLUGIN_URL . '/js/admin.js', array('jquery'), '20190125', true);
 }
 add_action( 'admin_enqueue_scripts', 'ccnlib_admin_scripts' );
+
+add_action( 'init', function() {
+    
+    /* ========================================================= */
+    /*                   TRANSLATION                             */
+    /* ========================================================= */
+    
+    // sources : 
+    // https://premium.wpmudev.org/blog/how-to-localize-a-wordpress-theme-and-make-it-translation-ready/
+    // https://github.com/fxbenard/Blank-WordPress-Pot
+    
+    //lib\php_console_log( CCN_LIBRARY_PLUGIN_DIR . '/languages');
+    //$b = load_plugin_textdomain( 'ccn', false, basename( dirname( __FILE__ ) ) . '/languages' );
+    $b = load_plugin_textdomain( 'ccn', false, CCN_LIBRARY_PLUGIN_DIR . '/languages' );
+    //if (!$b) lib\php_console_log("COULD NOT LOAD TRANSLATIONS FOR CCN CORE LIBRARY", "error");
+    
+});
+$b = load_plugin_textdomain( 'ccn', false, CCN_LIBRARY_PLUGIN_DIR . '/languages' );
 
 require_once 'create-contact-form.php';
 

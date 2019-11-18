@@ -181,7 +181,7 @@ function create_custom_post_metabox($cp_name, $metabox, $prefix, $all_fields) {
                     jQuery(document).ready(function($) {
 
                         let rules = <?php echo json_encode($rules); ?>;
-                        console.log('RULES', typeof rules, rules);
+                        //console.log('RULES', typeof rules, rules);
                         load_custom_logic(rules);
 
                     });
@@ -355,14 +355,14 @@ function create_custom_post_info(
 		'menu_name'           => __( $name_plural_camelcase),
 		// Les différents libellés de l'administration
 		'all_items'           => __( $tous.' les '.$name_plural_lowercase),
-		'view_item'           => __( 'Voir les '.$name_plural_lowercase),
+		'view_item'           => __( 'Voir les ').$name_plural_lowercase,
 		'add_new_item'        => __( 'Ajouter un'.$e.' '.$nouveau.' '.$name_singular_lowercase),
-		'add_new'             => __( 'Ajouter'),
-		'edit_item'           => __( 'Éditer '.$le.$name_singular_lowercase),
-		'update_item'         => __( 'Modifier '.$le.$name_singular_lowercase),
-		'search_items'        => __( 'Rechercher un'.$e.' '.$name_singular_lowercase),
-		'not_found'           => __( 'Non trouvé'.$e),
-		'not_found_in_trash'  => __( 'Non trouvé'.$e.' dans la corbeille'),
+		'add_new'             => __( 'Ajouter', 'ccn'),
+		'edit_item'           => __( 'Éditer', 'ccn').' '.$le.$name_singular_lowercase,
+		'update_item'         => __( 'Modifier', 'ccn').' '.$le.$name_singular_lowercase,
+		'search_items'        => __( 'Rechercher', 'ccn').' un'.$e.' '.$name_singular_lowercase,
+		'not_found'           => __( 'Non trouvé'.$e, 'ccn'),
+		'not_found_in_trash'  => __( 'Non trouvé'.$e, 'ccn').' dans la corbeille',
 	);
 	
 	// On peut définir ici d'autres options pour notre custom post type
