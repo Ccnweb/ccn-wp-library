@@ -244,7 +244,7 @@ function check_rule_condition(rule) {
     /**
      * Renvoie true ou false selon si la rule est ou non vérifiée
      */
-    console.log('checking rule', rule);
+    //console.log('checking rule', rule);
     let list_values = rule.source_ids.map(id => getVal(id));
     let parsed_condition = rule.condition;
     for (let i = 0; i < rule.source_ids.length; i++) {
