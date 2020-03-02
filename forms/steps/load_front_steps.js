@@ -29,6 +29,16 @@ function goToStep(current_form, step_nb, bypass_validation = false) {
 	current_fs = current_form.find('fieldset:visible')
 	//current_form = current_fs.closest('form.form-container'); // current <form>
 	next_fs = current_form.find('fieldset').eq(step_nb);
+
+	// we delete empty repeat groups
+	current_fs.find(".repeat-element").each(function() {
+		let all_fields_count = jQuery(this).find('input.ccnlib_post[required]:visible').length;
+		let n = 0;
+		jQuery(this).find('input.ccnlib_post[required]:visible').each(function() {
+			if (jQuery(this).val().trim() == "") n++;
+		});
+		if (all_fields_count > 0 && all_fields_count == n) jQuery(this).remove();
+	})
 	
 	// we check validity of all fields in current fieldset
 	let valid = validate_elements(current_fs.find('.ccnlib_post:visible'));
@@ -77,6 +87,16 @@ jQuery(".next").click(function(){
 	current_fs = jQuery(this).parent(); // current <fieldset>
 	current_form = current_fs.closest('form.form-container'); // current <form>
 	next_fs = jQuery(this).parent().next();
+
+	// we delete empty repeat groups
+	current_fs.find(".repeat-element").each(function() {
+		let all_fields_count = jQuery(this).find('input.ccnlib_post[required]:visible').length;
+		let n = 0;
+		jQuery(this).find('input.ccnlib_post[required]:visible').each(function() {
+			if (jQuery(this).val().trim() == "") n++;
+		});
+		if (all_fields_count > 0 && all_fields_count == n) jQuery(this).remove();
+	})
 	
 	// we check validity of all fields in current fieldset
 	let valid = validate_elements(current_fs.find('.ccnlib_post:visible'));

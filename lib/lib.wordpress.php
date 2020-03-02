@@ -108,8 +108,8 @@ function enqueue_elements_regex($type, $dir, $regex_pattern = '', $options = arr
     $i = 0;
     foreach ($element_to_be_enqueued as $el) {
         //echo 'ENQUEUE '.$type.' '.join_paths([$options['plugin_url'], $el['value']]).'<br>';
-        if ($type == 'style') wp_enqueue_style($options['prefix'].'-'.$i, join_paths([$options['plugin_url'], $el['value']]), $options['dependencies'], '20190107', 'all');
-        else wp_enqueue_script($options['prefix'].'-'.$i, join_paths([$options['plugin_url'], $el['value']]), $options['dependencies'], '20190107', 'all');
+        if ($type == 'style') wp_enqueue_style($options['prefix'].'-'.$i, join_paths([$options['plugin_url'], $el['value']]), $options['dependencies'], '20200302', 'all');
+        else wp_enqueue_script($options['prefix'].'-'.$i, join_paths([$options['plugin_url'], $el['value']]), $options['dependencies'], '20200302', 'all');
         $i++;
     }
 
