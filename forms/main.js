@@ -129,6 +129,7 @@ function ajax_form_submit(submit_btn) {
             } else if (!json_response['success']) {
                 toastr.error('Le requête a échoué')
             } else if (json_response['success']) {
+                toastr.options.closeDuration = 10000;
                 toastr.success('Les données ont bien été envoyées !');
                 // on remet les champs à zéro
                 form_elements.each(function() {
