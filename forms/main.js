@@ -277,7 +277,11 @@ function getVal(el_id) { // existe aussi dans forms-template.js.tpl
     // si l'élément existe, on récupère sa valeur, selon son tagname
     let tagname = el.prop('tagName');
     if (['SELECT', 'INPUT'].includes(tagname)) {
-        return el.val()
+        if (el.prop('type') == 'checkbox') {
+            return el.is(':checked')
+        } else {
+            return el.val()
+        }
     } else if (tagname == 'TEXTAREA') {
         return el.val().trim();
     }

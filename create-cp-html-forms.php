@@ -3,6 +3,9 @@
 require_once('log.php'); use \ccn\lib\log as log;
 require_once('lib.php'); use \ccn\lib as lib;
 require_once(CCN_LIBRARY_PLUGIN_DIR . '/forms/lib.forms.php'); use \ccn\lib\html_fields as fields;
+
+use function ccn\lib\php_console_log;
+
 require_once('create-cp-html-fields.php');
 
 function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields, $steps = array()) {
@@ -93,7 +96,11 @@ function create_HTML_form_shortcode($cp_id, $action_name, $options, $fields, $st
             // on crée le HTML des fields
             $fields_html .= '<div id="'.$switch_el_html_id.'" class="form-step-switch '.lib\getif($options, 'custom_classes/switch').'">';
             foreach ($step_fields as $field) {
-                if (fields\is_showable_in($field, 'front_create')) $fields_html .= create_HTML_field($field, $options['fields']);
+                if (fields\is_showable_in($field, 'front_create')) {
+                    // we use a unique field id
+                    // $field['id'] .= '-_-' . $switch_el_html_id;
+                    $fields_html .= create_HTML_field($field, $options['fields']);
+                }
             }
             $fields_html .= '</div>';
         }
